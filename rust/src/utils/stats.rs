@@ -53,6 +53,7 @@ impl OnlineStats {
     }
 
     /// Get population standard deviation
+    #[allow(dead_code)]
     pub fn std(&self) -> Array1<f64> {
         self.variance().mapv(f64::sqrt)
     }
@@ -71,8 +72,11 @@ pub fn compute_mean_var_parallel(data: ArrayView2<f64>) -> (Array1<f64>, Array1<
     let n_samples_f64 = n_samples as f64;
 
     // Parallel reduction: each thread computes partial sums for a chunk of rows
-    let (sums, sq_diffs): (Vec<f64>, Vec<f64>) = data
-        .axis_chunks_iter(ndarray::Axis(0), 10000.max(n_samples / rayon::current_num_threads()))
+    let sums: Vec<f64> = data
+        .axis_chunks_iter(
+            ndarray::Axis(0),
+            10000.max(n_samples / rayon::current_num_threads()),
+        )
         .into_par_iter()
         .map(|chunk| {
             let mut local_sums = vec![0.0; n_features];
@@ -91,20 +95,17 @@ pub fn compute_mean_var_parallel(data: ArrayView2<f64>) -> (Array1<f64>, Array1<
                 }
                 acc
             },
-        )
-        .into_iter()
-        .map(|s| {
-            let mean = s / n_samples_f64;
-            (s, mean)
-        })
-        .unzip::<_, _, Vec<_>, Vec<_>>();
+        );
 
     // Compute means from sums
     let means: Vec<f64> = sums.iter().map(|&s| s / n_samples_f64).collect();
 
     // Second pass for variance (parallel)
     let sq_diffs: Vec<f64> = data
-        .axis_chunks_iter(ndarray::Axis(0), 10000.max(n_samples / rayon::current_num_threads()))
+        .axis_chunks_iter(
+            ndarray::Axis(0),
+            10000.max(n_samples / rayon::current_num_threads()),
+        )
         .into_par_iter()
         .map(|chunk| {
             let mut local_sq = vec![0.0; n_features];
@@ -145,7 +146,10 @@ pub fn compute_min_max_parallel(data: ArrayView2<f64>) -> (Array1<f64>, Array1<f
 
     // Parallel reduction over row chunks
     let (mins, maxs): (Vec<f64>, Vec<f64>) = data
-        .axis_chunks_iter(ndarray::Axis(0), 10000.max(n_samples / rayon::current_num_threads()))
+        .axis_chunks_iter(
+            ndarray::Axis(0),
+            10000.max(n_samples / rayon::current_num_threads()),
+        )
         .into_par_iter()
         .map(|chunk| {
             let first_row = chunk.row(0);
@@ -165,7 +169,12 @@ pub fn compute_min_max_parallel(data: ArrayView2<f64>) -> (Array1<f64>, Array1<f
             (local_mins, local_maxs)
         })
         .reduce(
-            || (vec![f64::INFINITY; n_features], vec![f64::NEG_INFINITY; n_features]),
+            || {
+                (
+                    vec![f64::INFINITY; n_features],
+                    vec![f64::NEG_INFINITY; n_features],
+                )
+            },
             |(mut acc_min, mut acc_max), (local_min, local_max)| {
                 for i in 0..n_features {
                     if local_min[i] < acc_min[i] {

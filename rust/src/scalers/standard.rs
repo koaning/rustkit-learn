@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use ndarray::{Array1, Array2, Axis};
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray2};
 use pyo3::prelude::*;

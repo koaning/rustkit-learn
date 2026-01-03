@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use ndarray::{Array1, Array2, Axis};
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray2};
 use pyo3::prelude::*;
@@ -258,13 +260,8 @@ impl MinMaxScaler {
         let (feature_min, feature_max) = slf.feature_range;
         let feature_range = feature_max - feature_min;
 
-        let scale: Array1<f64> = data_range.mapv(|r| {
-            if r == 0.0 {
-                0.0
-            } else {
-                feature_range / r
-            }
-        });
+        let scale: Array1<f64> =
+            data_range.mapv(|r| if r == 0.0 { 0.0 } else { feature_range / r });
 
         let min: Array1<f64> = data_min
             .iter()
