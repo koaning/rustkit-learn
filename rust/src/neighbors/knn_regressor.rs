@@ -4,7 +4,7 @@ use ndarray::{Array1, Array2};
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyReadonlyArray2};
 use pyo3::prelude::*;
 
-use crate::utils::distances::{kneighbors_parallel, kneighbors_single, predict_parallel, predict_single};
+use super::knn_utils::{kneighbors_parallel, kneighbors_single, predict_parallel, predict_single};
 
 /// K-Nearest Neighbors Regressor.
 ///

@@ -33,82 +33,6 @@ pub fn minkowski_distance(a: ArrayView1<f64>, b: ArrayView1<f64>, p: f64) -> f64
     }
 }
 
-/// Compute distance matrix between test and train samples (parallel version).
-/// Returns a matrix of shape (n_test, n_train) where entry [i, j] is the
-/// distance between test sample i and train sample j.
-pub fn compute_distance_matrix_parallel(
-    x_test: ArrayView2<f64>,
-    x_train: ArrayView2<f64>,
-    metric: &str,
-    p: f64,
-) -> Array2<f64> {
-    let n_test = x_test.nrows();
-    let n_train = x_train.nrows();
-
-    // Determine effective p based on metric
-    let effective_p = match metric {
-        "euclidean" => 2.0,
-        "manhattan" => 1.0,
-        "minkowski" => p,
-        _ => 2.0, // Default to Euclidean
-    };
-
-    // Compute distances in parallel across test samples
-    let distances: Vec<Vec<f64>> = (0..n_test)
-        .into_par_iter()
-        .map(|i| {
-            let test_row = x_test.row(i);
-            (0..n_train)
-                .map(|j| {
-                    let train_row = x_train.row(j);
-                    minkowski_distance(test_row, train_row, effective_p)
-                })
-                .collect()
-        })
-        .collect();
-
-    // Convert to Array2
-    let mut result = Array2::zeros((n_test, n_train));
-    for (i, row) in distances.into_iter().enumerate() {
-        for (j, dist) in row.into_iter().enumerate() {
-            result[[i, j]] = dist;
-        }
-    }
-
-    result
-}
-
-/// Compute distance matrix between test and train samples (single-threaded version).
-pub fn compute_distance_matrix_single(
-    x_test: ArrayView2<f64>,
-    x_train: ArrayView2<f64>,
-    metric: &str,
-    p: f64,
-) -> Array2<f64> {
-    let n_test = x_test.nrows();
-    let n_train = x_train.nrows();
-
-    // Determine effective p based on metric
-    let effective_p = match metric {
-        "euclidean" => 2.0,
-        "manhattan" => 1.0,
-        "minkowski" => p,
-        _ => 2.0,
-    };
-
-    let mut result = Array2::zeros((n_test, n_train));
-
-    for i in 0..n_test {
-        let test_row = x_test.row(i);
-        for j in 0..n_train {
-            let train_row = x_train.row(j);
-            result[[i, j]] = minkowski_distance(test_row, train_row, effective_p);
-        }
-    }
-
-    result
-}
-
 /// Find indices of k smallest values in a slice.
 /// Returns (indices, distances) sorted by distance.
 pub fn find_k_nearest(distances: &[f64], k: usize) -> (Vec<usize>, Vec<f64>) {
@@ -132,6 +56,17 @@ pub fn find_k_nearest(distances: &[f64], k: usize) -> (Vec<usize>, Vec<f64>) {
     (indices, dists)
 }
 
+/// Get the effective p value for a given metric name.
+#[inline]
+fn effective_p(metric: &str, p: f64) -> f64 {
+    match metric {
+        "euclidean" => 2.0,
+        "manhattan" => 1.0,
+        "minkowski" => p,
+        _ => 2.0,
+    }
+}
+
 /// Compute predictions using k-nearest neighbors (parallel version).
 /// Returns predictions for each test sample.
 pub fn predict_parallel(
@@ -145,14 +80,7 @@ pub fn predict_parallel(
 ) -> Vec<f64> {
     let n_test = x_test.nrows();
     let n_train = x_train.nrows();
-
-    let effective_p = match metric {
-        "euclidean" => 2.0,
-        "manhattan" => 1.0,
-        "minkowski" => p,
-        _ => 2.0,
-    };
-
+    let effective_p = effective_p(metric, p);
     let use_distance_weights = weights == "distance";
 
     (0..n_test)
@@ -216,14 +144,7 @@ pub fn predict_single(
 ) -> Vec<f64> {
     let n_test = x_test.nrows();
     let n_train = x_train.nrows();
-
-    let effective_p = match metric {
-        "euclidean" => 2.0,
-        "manhattan" => 1.0,
-        "minkowski" => p,
-        _ => 2.0,
-    };
-
+    let effective_p = effective_p(metric, p);
     let use_distance_weights = weights == "distance";
 
     let mut predictions = Vec::with_capacity(n_test);
@@ -288,13 +209,7 @@ pub fn kneighbors_parallel(
     let n_test = x_test.nrows();
     let n_train = x_train.nrows();
     let k = k.min(n_train);
-
-    let effective_p = match metric {
-        "euclidean" => 2.0,
-        "manhattan" => 1.0,
-        "minkowski" => p,
-        _ => 2.0,
-    };
+    let effective_p = effective_p(metric, p);
 
     let results: Vec<(Vec<f64>, Vec<usize>)> = (0..n_test)
         .into_par_iter()
@@ -337,13 +252,7 @@ pub fn kneighbors_single(
     let n_test = x_test.nrows();
     let n_train = x_train.nrows();
     let k = k.min(n_train);
-
-    let effective_p = match metric {
-        "euclidean" => 2.0,
-        "manhattan" => 1.0,
-        "minkowski" => p,
-        _ => 2.0,
-    };
+    let effective_p = effective_p(metric, p);
 
     let mut dist_result = Array2::zeros((n_test, k));
     let mut idx_result = Array2::zeros((n_test, k));
@@ -416,23 +325,5 @@ mod tests {
         assert_eq!(indices.len(), 3);
         assert_eq!(indices, vec![1, 2, 0]);
         assert_eq!(dists, vec![1.0, 2.0, 3.0]);
-    }
-
-    #[test]
-    fn test_distance_matrix() {
-        let x_test = array![[0.0, 0.0], [1.0, 1.0]];
-        let x_train = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
-
-        let result = compute_distance_matrix_single(x_test.view(), x_train.view(), "euclidean", 2.0);
-
-        // Test sample 0 distances
-        assert!((result[[0, 0]] - 0.0).abs() < 1e-10); // [0,0] to [0,0]
-        assert!((result[[0, 1]] - 1.0).abs() < 1e-10); // [0,0] to [1,0]
-        assert!((result[[0, 2]] - 1.0).abs() < 1e-10); // [0,0] to [0,1]
-
-        // Test sample 1 distances
-        assert!((result[[1, 0]] - 2.0_f64.sqrt()).abs() < 1e-10); // [1,1] to [0,0]
-        assert!((result[[1, 1]] - 1.0).abs() < 1e-10); // [1,1] to [1,0]
-        assert!((result[[1, 2]] - 1.0).abs() < 1e-10); // [1,1] to [0,1]
     }
 }
