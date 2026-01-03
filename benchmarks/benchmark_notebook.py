@@ -38,8 +38,8 @@ def _():
 def _():
     from sklearn.preprocessing import StandardScaler as SklearnStandardScaler
     from sklearn.preprocessing import MinMaxScaler as SklearnMinMaxScaler
-    from rklearn import StandardScaler as RklearnStandardScaler
-    from rklearn import MinMaxScaler as RklearnMinMaxScaler
+    from rklearn.preprocessing import StandardScaler as RklearnStandardScaler
+    from rklearn.preprocessing import MinMaxScaler as RklearnMinMaxScaler
     return (
         RklearnMinMaxScaler,
         RklearnStandardScaler,
@@ -285,7 +285,7 @@ def _(mo):
 
     ### Usage
     ```python
-    from rklearn import StandardScaler
+    from rklearn.preprocessing import StandardScaler
 
     # Fair single-threaded comparison (default)
     scaler = StandardScaler(n_jobs=1)

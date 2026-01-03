@@ -1,10 +1,6 @@
 """
 rklearn - Fast scikit-learn compatible preprocessing in Rust
 """
-from ._rklearn import MinMaxScaler, StandardScaler, __version__
+from ._rklearn import __version__
 
-__all__ = [
-    "StandardScaler",
-    "MinMaxScaler",
-    "__version__",
-]
+__all__ = ["__version__"]

@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from rklearn import MinMaxScaler
+from rklearn.preprocessing import MinMaxScaler
 
 
 class TestMinMaxScaler:

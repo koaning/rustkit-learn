@@ -20,7 +20,7 @@ pip install -e ".[dev]"
 
 ```python
 import numpy as np
-from rklearn import StandardScaler, MinMaxScaler
+from rklearn.preprocessing import StandardScaler, MinMaxScaler
 
 # StandardScaler - standardize features by removing mean and scaling to unit variance
 X = np.random.randn(1000, 10)

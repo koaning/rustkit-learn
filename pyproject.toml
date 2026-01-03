@@ -40,3 +40,8 @@ dev = [
 python-source = "python"
 module-name = "rklearn._rklearn"
 features = ["pyo3/extension-module"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+]
