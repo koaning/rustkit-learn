@@ -1,0 +1,23 @@
+[package]
+name = "rklearn"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Fast scikit-learn compatible preprocessing in Rust"
+
+[lib]
+name = "_rklearn"
+crate-type = ["cdylib"]
+path = "rust/src/lib.rs"
+
+[dependencies]
+pyo3 = { version = "0.27", features = ["extension-module"] }
+numpy = "0.27"
+ndarray = { version = "0.17", features = ["rayon"] }
+rayon = "1.10"
+thiserror = "2.0"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
