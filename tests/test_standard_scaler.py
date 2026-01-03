@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from rklearn import StandardScaler
+from rklearn.preprocessing import StandardScaler
 
 
 class TestStandardScaler:

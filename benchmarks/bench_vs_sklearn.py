@@ -7,7 +7,7 @@ sklearn = pytest.importorskip("sklearn")
 from sklearn.preprocessing import StandardScaler as SklearnStandardScaler
 from sklearn.preprocessing import MinMaxScaler as SklearnMinMaxScaler
 
-from rklearn import StandardScaler, MinMaxScaler
+from rklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
 # Data sizes to benchmark
