@@ -6,8 +6,15 @@ use rayon::prelude::*;
 /// - p=1 gives Manhattan distance
 /// - p=2 gives Euclidean distance
 #[inline]
-pub fn minkowski_distance(a: ArrayView1<f64>, b: ArrayView1<f64>, p: f64) -> f64 {
-    if p == 2.0 {
+pub fn minkowski_distance(a: ArrayView1<f64>, b: ArrayView1<f64>, metric: &str, p: f64) -> f64 {
+    let effective_p = match metric {
+        "euclidean" => 2.0,
+        "manhattan" => 1.0,
+        "minkowski" => p,
+        _ => 2.0,
+    };
+
+    if effective_p == 2.0 {
         // Optimized Euclidean distance
         a.iter()
             .zip(b.iter())
@@ -17,7 +24,7 @@ pub fn minkowski_distance(a: ArrayView1<f64>, b: ArrayView1<f64>, p: f64) -> f64
             })
             .sum::<f64>()
             .sqrt()
-    } else if p == 1.0 {
+    } else if effective_p == 1.0 {
         // Optimized Manhattan distance
         a.iter()
             .zip(b.iter())
@@ -27,9 +34,9 @@ pub fn minkowski_distance(a: ArrayView1<f64>, b: ArrayView1<f64>, p: f64) -> f64
         // General Minkowski distance
         a.iter()
             .zip(b.iter())
-            .map(|(ai, bi)| (ai - bi).abs().powf(p))
+            .map(|(ai, bi)| (ai - bi).abs().powf(effective_p))
             .sum::<f64>()
-            .powf(1.0 / p)
+            .powf(1.0 / effective_p)
     }
 }
 
@@ -56,16 +63,6 @@ pub fn find_k_nearest(distances: &[f64], k: usize) -> (Vec<usize>, Vec<f64>) {
     (indices, dists)
 }
 
-/// Get the effective p value for a given metric name.
-#[inline]
-fn effective_p(metric: &str, p: f64) -> f64 {
-    match metric {
-        "euclidean" => 2.0,
-        "manhattan" => 1.0,
-        "minkowski" => p,
-        _ => 2.0,
-    }
-}
 
 /// Compute predictions using k-nearest neighbors (parallel version).
 /// Returns predictions for each test sample.
@@ -80,7 +77,6 @@ pub fn predict_parallel(
 ) -> Vec<f64> {
     let n_test = x_test.nrows();
     let n_train = x_train.nrows();
-    let effective_p = effective_p(metric, p);
     let use_distance_weights = weights == "distance";
 
     (0..n_test)
@@ -92,7 +88,7 @@ pub fn predict_parallel(
             let distances: Vec<f64> = (0..n_train)
                 .map(|j| {
                     let train_row = x_train.row(j);
-                    minkowski_distance(test_row, train_row, effective_p)
+                    minkowski_distance(test_row, train_row, metric, p)
                 })
                 .collect();
 
@@ -144,7 +140,6 @@ pub fn predict_single(
 ) -> Vec<f64> {
     let n_test = x_test.nrows();
     let n_train = x_train.nrows();
-    let effective_p = effective_p(metric, p);
     let use_distance_weights = weights == "distance";
 
     let mut predictions = Vec::with_capacity(n_test);
@@ -156,7 +151,7 @@ pub fn predict_single(
         let distances: Vec<f64> = (0..n_train)
             .map(|j| {
                 let train_row = x_train.row(j);
-                minkowski_distance(test_row, train_row, effective_p)
+                minkowski_distance(test_row, train_row, metric, p)
             })
             .collect();
 
@@ -209,7 +204,6 @@ pub fn kneighbors_parallel(
     let n_test = x_test.nrows();
     let n_train = x_train.nrows();
     let k = k.min(n_train);
-    let effective_p = effective_p(metric, p);
 
     let results: Vec<(Vec<f64>, Vec<usize>)> = (0..n_test)
         .into_par_iter()
@@ -219,7 +213,7 @@ pub fn kneighbors_parallel(
             let distances: Vec<f64> = (0..n_train)
                 .map(|j| {
                     let train_row = x_train.row(j);
-                    minkowski_distance(test_row, train_row, effective_p)
+                    minkowski_distance(test_row, train_row, metric, p)
                 })
                 .collect();
 
@@ -252,7 +246,6 @@ pub fn kneighbors_single(
     let n_test = x_test.nrows();
     let n_train = x_train.nrows();
     let k = k.min(n_train);
-    let effective_p = effective_p(metric, p);
 
     let mut dist_result = Array2::zeros((n_test, k));
     let mut idx_result = Array2::zeros((n_test, k));
@@ -263,7 +256,7 @@ pub fn kneighbors_single(
         let distances: Vec<f64> = (0..n_train)
             .map(|j| {
                 let train_row = x_train.row(j);
-                minkowski_distance(test_row, train_row, effective_p)
+                minkowski_distance(test_row, train_row, metric, p)
             })
             .collect();
 
@@ -287,7 +280,7 @@ mod tests {
     fn test_euclidean_distance() {
         let a = array![0.0, 0.0];
         let b = array![3.0, 4.0];
-        let dist = minkowski_distance(a.view(), b.view(), 2.0);
+        let dist = minkowski_distance(a.view(), b.view(), "euclidean", 2.0);
         assert!((dist - 5.0).abs() < 1e-10);
     }
 
@@ -295,7 +288,7 @@ mod tests {
     fn test_manhattan_distance() {
         let a = array![0.0, 0.0];
         let b = array![3.0, 4.0];
-        let dist = minkowski_distance(a.view(), b.view(), 1.0);
+        let dist = minkowski_distance(a.view(), b.view(), "manhattan", 1.0);
         assert!((dist - 7.0).abs() < 1e-10);
     }
 
@@ -303,7 +296,7 @@ mod tests {
     fn test_minkowski_distance_p3() {
         let a = array![0.0, 0.0];
         let b = array![3.0, 4.0];
-        let dist = minkowski_distance(a.view(), b.view(), 3.0);
+        let dist = minkowski_distance(a.view(), b.view(), "minkowski", 3.0);
         let expected = (27.0_f64 + 64.0_f64).powf(1.0 / 3.0);
         assert!((dist - expected).abs() < 1e-10);
     }
