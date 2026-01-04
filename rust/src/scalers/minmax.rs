@@ -450,6 +450,37 @@ impl MinMaxScaler {
     fn n_samples_seen_(&self) -> usize {
         self.n_samples_seen
     }
+
+    /// Get parameters for this estimator.
+    #[pyo3(signature = (deep=true))]
+    fn get_params(
+        &self,
+        py: Python<'_>,
+        deep: bool,
+    ) -> std::collections::HashMap<String, PyObject> {
+        let _ = deep;
+        let mut params = std::collections::HashMap::new();
+        params.insert(
+            "feature_range".to_string(),
+            self.feature_range
+                .into_pyobject(py)
+                .unwrap()
+                .unbind()
+                .into(),
+        );
+        params.insert(
+            "clip".to_string(),
+            pyo3::types::PyBool::new(py, self.clip)
+                .to_owned()
+                .unbind()
+                .into(),
+        );
+        params.insert(
+            "n_jobs".to_string(),
+            self.n_jobs.into_pyobject(py).unwrap().unbind().into(),
+        );
+        params
+    }
 }
 
 impl MinMaxScaler {
