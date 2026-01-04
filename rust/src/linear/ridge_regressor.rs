@@ -118,7 +118,7 @@ impl RidgeRegressor {
         }
 
         let coef_vec = xtx
-            .solve_into(xty)
+            .solve(&xty)
             .map_err(|_| PyErr::new::<pyo3::exceptions::PyValueError, _>("Solve failed"))?;
         let intercept = if slf.fit_intercept {
             let x_mean = x_mean.unwrap();
