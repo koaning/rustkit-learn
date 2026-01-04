@@ -203,11 +203,11 @@ pub fn initialize_centroids_kmeans_plusplus(
         for _ in 0..n_local_trials {
             let threshold = rng.next_f64() * current_pot;
             // Binary search for efficiency
-            let candidate_idx = match cumsum.binary_search_by(|v| v.partial_cmp(&threshold).unwrap())
-            {
-                Ok(i) => i,
-                Err(i) => i.min(n_samples - 1),
-            };
+            let candidate_idx =
+                match cumsum.binary_search_by(|v| v.partial_cmp(&threshold).unwrap()) {
+                    Ok(i) => i,
+                    Err(i) => i.min(n_samples - 1),
+                };
             candidate_indices.push(candidate_idx);
         }
 
