@@ -22,6 +22,7 @@ use ndarray_linalg::Solve;
 pub struct RidgeRegressor {
     alpha: f64,
     fit_intercept: bool,
+    #[allow(dead_code)]
     solver: String,
 
     coef: Option<Array1<f64>>,
