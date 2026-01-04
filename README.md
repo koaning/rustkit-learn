@@ -5,10 +5,14 @@ Fast scikit-learn compatible components in Rust.
 ## Installation
 
 ```bash
-pip install rustkit-learn
+uv pip install git+https://github.com/koaning/rustkit-learn.git
 ```
 
 ## Components
+
+### Linear Models
+
+- **RidgeRegressor** - Linear least squares with L2 regularization
 
 ### Preprocessing
 
