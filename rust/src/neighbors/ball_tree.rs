@@ -1,6 +1,6 @@
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use std::collections::BinaryHeap;
 use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 
 use super::knn_utils::minkowski_distance;
 
@@ -53,7 +53,9 @@ impl PartialOrd for Neighbor {
 impl Ord for Neighbor {
     fn cmp(&self, other: &Self) -> Ordering {
         // Max-heap: larger distances come first
-        self.distance.partial_cmp(&other.distance).unwrap_or(Ordering::Equal)
+        self.distance
+            .partial_cmp(&other.distance)
+            .unwrap_or(Ordering::Equal)
     }
 }
 
@@ -139,7 +141,8 @@ impl BallTree {
         center /= indices.len() as f64;
 
         // Compute radius (max distance from center to any point)
-        let radius = indices.iter()
+        let radius = indices
+            .iter()
             .map(|&idx| minkowski_distance(center.view(), self.data.row(idx), &self.metric, self.p))
             .fold(0.0_f64, |a, b| a.max(b));
 
@@ -152,9 +155,7 @@ impl BallTree {
         let mut best_spread = 0.0;
 
         for dim in 0..n_features {
-            let values: Vec<f64> = indices.iter()
-                .map(|&i| self.data[[i, dim]])
-                .collect();
+            let values: Vec<f64> = indices.iter().map(|&i| self.data[[i, dim]]).collect();
 
             let min_val = values.iter().cloned().fold(f64::INFINITY, f64::min);
             let max_val = values.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
@@ -177,7 +178,11 @@ impl BallTree {
 
         // Extract results from heap (they come out in reverse order)
         let mut results: Vec<Neighbor> = heap.into_vec();
-        results.sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap_or(Ordering::Equal));
+        results.sort_by(|a, b| {
+            a.distance
+                .partial_cmp(&b.distance)
+                .unwrap_or(Ordering::Equal)
+        });
 
         let indices: Vec<usize> = results.iter().map(|n| n.index).collect();
         let distances: Vec<f64> = results.iter().map(|n| n.distance).collect();
@@ -214,11 +219,17 @@ impl BallTree {
                 let dist = minkowski_distance(point, self.data.row(idx), &self.metric, self.p);
 
                 if heap.len() < k {
-                    heap.push(Neighbor { index: idx, distance: dist });
+                    heap.push(Neighbor {
+                        index: idx,
+                        distance: dist,
+                    });
                 } else if let Some(worst) = heap.peek() {
                     if dist < worst.distance {
                         heap.pop();
-                        heap.push(Neighbor { index: idx, distance: dist });
+                        heap.push(Neighbor {
+                            index: idx,
+                            distance: dist,
+                        });
                     }
                 }
             }
@@ -227,12 +238,12 @@ impl BallTree {
 
         // Internal node: visit children
         // Visit the closer child first for better pruning
-        let left_dist = node.left.map(|l| {
-            minkowski_distance(point, self.nodes[l].center.view(), &self.metric, self.p)
-        });
-        let right_dist = node.right.map(|r| {
-            minkowski_distance(point, self.nodes[r].center.view(), &self.metric, self.p)
-        });
+        let left_dist = node
+            .left
+            .map(|l| minkowski_distance(point, self.nodes[l].center.view(), &self.metric, self.p));
+        let right_dist = node
+            .right
+            .map(|r| minkowski_distance(point, self.nodes[r].center.view(), &self.metric, self.p));
 
         let (first_child, second_child) = match (left_dist, right_dist) {
             (Some(ld), Some(rd)) if ld <= rd => (node.left, node.right),

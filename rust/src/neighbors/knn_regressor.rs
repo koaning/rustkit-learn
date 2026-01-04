@@ -217,7 +217,12 @@ impl KNeighborsRegressor {
                     tree.query_batch_single(x_test, k, &metric, p)
                 };
 
-                self.compute_predictions_from_neighbors(&indices_2d, &distances_2d, y_train, use_distance_weights)
+                self.compute_predictions_from_neighbors(
+                    &indices_2d,
+                    &distances_2d,
+                    y_train,
+                    use_distance_weights,
+                )
             }
             "ball_tree" => {
                 let tree = self.ball_tree.as_ref().unwrap();
@@ -229,7 +234,12 @@ impl KNeighborsRegressor {
                     tree.query_batch_single(x_test, k)
                 };
 
-                self.compute_predictions_from_neighbors(&indices_2d, &distances_2d, y_train, use_distance_weights)
+                self.compute_predictions_from_neighbors(
+                    &indices_2d,
+                    &distances_2d,
+                    y_train,
+                    use_distance_weights,
+                )
             }
             _ => {
                 // Brute force
@@ -342,7 +352,13 @@ impl KNeighborsRegressor {
 
                 if use_parallel {
                     py.allow_threads(move || {
-                        kneighbors_parallel(x_test_owned.view(), x_train_owned.view(), k, &metric, p)
+                        kneighbors_parallel(
+                            x_test_owned.view(),
+                            x_train_owned.view(),
+                            k,
+                            &metric,
+                            p,
+                        )
                     })
                 } else {
                     py.allow_threads(move || {
@@ -440,16 +456,56 @@ impl KNeighborsRegressor {
 
     /// Get parameters for this estimator.
     #[pyo3(signature = (deep=true))]
-    fn get_params(&self, py: Python<'_>, deep: bool) -> std::collections::HashMap<String, PyObject> {
+    fn get_params(
+        &self,
+        py: Python<'_>,
+        deep: bool,
+    ) -> std::collections::HashMap<String, PyObject> {
         let _ = deep;
         let mut params = std::collections::HashMap::new();
-        params.insert("n_neighbors".to_string(), self.n_neighbors.into_pyobject(py).unwrap().unbind().into());
-        params.insert("weights".to_string(), self.weights.clone().into_pyobject(py).unwrap().unbind().into());
-        params.insert("algorithm".to_string(), self.algorithm.clone().into_pyobject(py).unwrap().unbind().into());
-        params.insert("leaf_size".to_string(), self.leaf_size.into_pyobject(py).unwrap().unbind().into());
-        params.insert("metric".to_string(), self.metric.clone().into_pyobject(py).unwrap().unbind().into());
-        params.insert("p".to_string(), self.p.into_pyobject(py).unwrap().unbind().into());
-        params.insert("n_jobs".to_string(), self.n_jobs.into_pyobject(py).unwrap().unbind().into());
+        params.insert(
+            "n_neighbors".to_string(),
+            self.n_neighbors.into_pyobject(py).unwrap().unbind().into(),
+        );
+        params.insert(
+            "weights".to_string(),
+            self.weights
+                .clone()
+                .into_pyobject(py)
+                .unwrap()
+                .unbind()
+                .into(),
+        );
+        params.insert(
+            "algorithm".to_string(),
+            self.algorithm
+                .clone()
+                .into_pyobject(py)
+                .unwrap()
+                .unbind()
+                .into(),
+        );
+        params.insert(
+            "leaf_size".to_string(),
+            self.leaf_size.into_pyobject(py).unwrap().unbind().into(),
+        );
+        params.insert(
+            "metric".to_string(),
+            self.metric
+                .clone()
+                .into_pyobject(py)
+                .unwrap()
+                .unbind()
+                .into(),
+        );
+        params.insert(
+            "p".to_string(),
+            self.p.into_pyobject(py).unwrap().unbind().into(),
+        );
+        params.insert(
+            "n_jobs".to_string(),
+            self.n_jobs.into_pyobject(py).unwrap().unbind().into(),
+        );
         params
     }
 }

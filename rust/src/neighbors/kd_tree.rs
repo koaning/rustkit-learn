@@ -1,6 +1,6 @@
 use ndarray::{Array2, ArrayView1, ArrayView2};
-use std::collections::BinaryHeap;
 use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 
 use super::knn_utils::minkowski_distance;
 
@@ -50,7 +50,9 @@ impl PartialOrd for Neighbor {
 impl Ord for Neighbor {
     fn cmp(&self, other: &Self) -> Ordering {
         // Max-heap: larger distances come first
-        self.distance.partial_cmp(&other.distance).unwrap_or(Ordering::Equal)
+        self.distance
+            .partial_cmp(&other.distance)
+            .unwrap_or(Ordering::Equal)
     }
 }
 
@@ -89,15 +91,14 @@ impl KDTree {
         let split_dim = depth % n_features;
 
         // Find median value along split dimension
-        let mut values: Vec<f64> = indices.iter()
-            .map(|&i| self.data[[i, split_dim]])
-            .collect();
+        let mut values: Vec<f64> = indices.iter().map(|&i| self.data[[i, split_dim]]).collect();
         values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
         let median_idx = values.len() / 2;
         let split_val = values[median_idx];
 
         // Partition indices
-        let (left_indices, right_indices): (Vec<usize>, Vec<usize>) = indices.iter()
+        let (left_indices, right_indices): (Vec<usize>, Vec<usize>) = indices
+            .iter()
             .partition(|&&i| self.data[[i, split_dim]] < split_val);
 
         // Handle edge case where all values are equal
@@ -129,14 +130,24 @@ impl KDTree {
     }
 
     /// Query k nearest neighbors for a single point
-    pub fn query(&self, point: ArrayView1<f64>, k: usize, metric: &str, p: f64) -> (Vec<usize>, Vec<f64>) {
+    pub fn query(
+        &self,
+        point: ArrayView1<f64>,
+        k: usize,
+        metric: &str,
+        p: f64,
+    ) -> (Vec<usize>, Vec<f64>) {
         let mut heap: BinaryHeap<Neighbor> = BinaryHeap::with_capacity(k);
 
         self.query_recursive(0, point, k, metric, p, &mut heap);
 
         // Extract results from heap (they come out in reverse order)
         let mut results: Vec<Neighbor> = heap.into_vec();
-        results.sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap_or(Ordering::Equal));
+        results.sort_by(|a, b| {
+            a.distance
+                .partial_cmp(&b.distance)
+                .unwrap_or(Ordering::Equal)
+        });
 
         let indices: Vec<usize> = results.iter().map(|n| n.index).collect();
         let distances: Vec<f64> = results.iter().map(|n| n.distance).collect();
@@ -161,11 +172,17 @@ impl KDTree {
                 let dist = minkowski_distance(point, self.data.row(idx), metric, p);
 
                 if heap.len() < k {
-                    heap.push(Neighbor { index: idx, distance: dist });
+                    heap.push(Neighbor {
+                        index: idx,
+                        distance: dist,
+                    });
                 } else if let Some(worst) = heap.peek() {
                     if dist < worst.distance {
                         heap.pop();
-                        heap.push(Neighbor { index: idx, distance: dist });
+                        heap.push(Neighbor {
+                            index: idx,
+                            distance: dist,
+                        });
                     }
                 }
             }
@@ -190,8 +207,8 @@ impl KDTree {
 
         // Check if we need to search the other child
         let axis_dist = (point_val - split_val).abs();
-        let should_search_other = heap.len() < k ||
-            heap.peek().map(|n| axis_dist < n.distance).unwrap_or(true);
+        let should_search_other =
+            heap.len() < k || heap.peek().map(|n| axis_dist < n.distance).unwrap_or(true);
 
         if should_search_other {
             if let Some(child) = second_child {

@@ -63,7 +63,6 @@ pub fn find_k_nearest(distances: &[f64], k: usize) -> (Vec<usize>, Vec<f64>) {
     (indices, dists)
 }
 
-
 /// Compute predictions using k-nearest neighbors (parallel version).
 /// Returns predictions for each test sample.
 pub fn predict_parallel(

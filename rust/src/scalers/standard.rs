@@ -399,12 +399,31 @@ impl StandardScaler {
 
     /// Get parameters for this estimator.
     #[pyo3(signature = (deep=true))]
-    fn get_params(&self, py: Python<'_>, deep: bool) -> std::collections::HashMap<String, PyObject> {
+    fn get_params(
+        &self,
+        py: Python<'_>,
+        deep: bool,
+    ) -> std::collections::HashMap<String, PyObject> {
         let _ = deep;
         let mut params = std::collections::HashMap::new();
-        params.insert("with_mean".to_string(), pyo3::types::PyBool::new(py, self.with_mean).to_owned().unbind().into());
-        params.insert("with_std".to_string(), pyo3::types::PyBool::new(py, self.with_std).to_owned().unbind().into());
-        params.insert("n_jobs".to_string(), self.n_jobs.into_pyobject(py).unwrap().unbind().into());
+        params.insert(
+            "with_mean".to_string(),
+            pyo3::types::PyBool::new(py, self.with_mean)
+                .to_owned()
+                .unbind()
+                .into(),
+        );
+        params.insert(
+            "with_std".to_string(),
+            pyo3::types::PyBool::new(py, self.with_std)
+                .to_owned()
+                .unbind()
+                .into(),
+        );
+        params.insert(
+            "n_jobs".to_string(),
+            self.n_jobs.into_pyobject(py).unwrap().unbind().into(),
+        );
         params
     }
 }
