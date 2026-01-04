@@ -1,4 +1,4 @@
-use ndarray::{Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array2, ArrayView1, ArrayView2};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
@@ -81,7 +81,7 @@ impl KDTree {
             leaf_size,
         };
 
-        tree.build_recursive(&indices, 0);
+        tree.build_recursive(&indices);
         tree
     }
 
@@ -92,7 +92,7 @@ impl KDTree {
         &self.data_slice[start..start + self.n_features]
     }
 
-    fn build_recursive(&mut self, indices: &[usize], depth: usize) -> usize {
+    fn build_recursive(&mut self, indices: &[usize]) -> usize {
         let node_idx = self.nodes.len();
 
         // Create leaf node if small enough
@@ -139,8 +139,8 @@ impl KDTree {
         });
 
         // Build children
-        let left_child = self.build_recursive(&left_indices, depth + 1);
-        let right_child = self.build_recursive(&right_indices, depth + 1);
+        let left_child = self.build_recursive(&left_indices);
+        let right_child = self.build_recursive(&right_indices);
 
         // Update node with children
         self.nodes[node_idx].left = Some(left_child);
@@ -487,10 +487,5 @@ impl KDTree {
         }
 
         (indices, distances)
-    }
-
-    /// Get reference to stored data
-    pub fn data(&self) -> &Array2<f64> {
-        &self.data
     }
 }

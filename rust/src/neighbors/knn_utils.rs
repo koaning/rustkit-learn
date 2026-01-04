@@ -132,44 +132,6 @@ pub fn compute_distance(a: ArrayView1<f64>, b: ArrayView1<f64>, metric: Distance
     }
 }
 
-/// Compute squared distance for comparison (avoids sqrt when possible)
-#[inline]
-pub fn compute_squared_distance(
-    a: ArrayView1<f64>,
-    b: ArrayView1<f64>,
-    metric: DistanceMetric,
-) -> f64 {
-    match metric {
-        DistanceMetric::Euclidean => squared_euclidean_distance(a, b),
-        DistanceMetric::Manhattan => {
-            let d = a
-                .iter()
-                .zip(b.iter())
-                .map(|(ai, bi)| (ai - bi).abs())
-                .sum::<f64>();
-            d * d // square it for comparison
-        }
-        DistanceMetric::Minkowski(p) => {
-            let d = a
-                .iter()
-                .zip(b.iter())
-                .map(|(ai, bi)| (ai - bi).abs().powf(p))
-                .sum::<f64>()
-                .powf(1.0 / p);
-            d * d
-        }
-    }
-}
-
-/// Convert squared distance back to actual distance
-#[inline]
-pub fn sqrt_distance(squared_dist: f64, metric: DistanceMetric) -> f64 {
-    match metric {
-        DistanceMetric::Euclidean => squared_dist.sqrt(),
-        _ => squared_dist.sqrt(), // Other metrics already squared the final distance
-    }
-}
-
 /// Find indices of k smallest values in a slice.
 /// Returns (indices, distances) sorted by distance.
 pub fn find_k_nearest(distances: &[f64], k: usize) -> (Vec<usize>, Vec<f64>) {

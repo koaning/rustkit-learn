@@ -135,9 +135,7 @@ impl KNeighborsRegressor {
             "auto" => {
                 // sklearn switches to brute force around 15-20 features
                 // and also for small datasets where tree overhead isn't worth it
-                if n_features > 15 {
-                    "brute".to_string()
-                } else if n_samples < 30 {
+                if n_features > 15 || n_samples < 30 {
                     "brute".to_string()
                 } else {
                     "kd_tree".to_string()

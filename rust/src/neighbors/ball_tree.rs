@@ -310,9 +310,4 @@ impl BallTree {
 
         (indices, distances)
     }
-
-    /// Get reference to stored data
-    pub fn data(&self) -> &Array2<f64> {
-        &self.data
-    }
 }
