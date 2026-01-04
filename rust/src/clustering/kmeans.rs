@@ -139,9 +139,23 @@ impl KMeans {
         let init = slf.init.clone();
         let n_init = slf.n_init;
         let max_iter = slf.max_iter;
-        let tol = slf.tol;
         let random_state = slf.random_state;
         let use_parallel = slf.n_jobs != 1;
+
+        // Compute scaled tolerance (same as sklearn: tol * mean(var(X, axis=0)))
+        // This makes the tolerance relative to the data scale
+        let mean_var = {
+            let n = n_samples as f64;
+            let mut total_var = 0.0;
+            for col in 0..n_features {
+                let col_data = x_owned.column(col);
+                let mean: f64 = col_data.iter().sum::<f64>() / n;
+                let var: f64 = col_data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n;
+                total_var += var;
+            }
+            total_var / n_features as f64
+        };
+        let tol = slf.tol * mean_var;
 
         // Run k-means n_init times and keep best result
         let (best_centroids, best_labels, best_inertia, best_n_iter) =
@@ -299,9 +313,22 @@ impl KMeans {
         let init = slf.init.clone();
         let n_init = slf.n_init;
         let max_iter = slf.max_iter;
-        let tol = slf.tol;
         let random_state = slf.random_state;
         let use_parallel = slf.n_jobs != 1;
+
+        // Compute scaled tolerance (same as sklearn: tol * mean(var(X, axis=0)))
+        let mean_var = {
+            let n = n_samples as f64;
+            let mut total_var = 0.0;
+            for col in 0..n_features {
+                let col_data = x_owned.column(col);
+                let mean: f64 = col_data.iter().sum::<f64>() / n;
+                let var: f64 = col_data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n;
+                total_var += var;
+            }
+            total_var / n_features as f64
+        };
+        let tol = slf.tol * mean_var;
 
         let (best_centroids, best_labels, best_inertia, best_n_iter) =
             py.allow_threads(move || {
@@ -450,9 +477,22 @@ impl KMeans {
         let init = slf.init.clone();
         let n_init = slf.n_init;
         let max_iter = slf.max_iter;
-        let tol = slf.tol;
         let random_state = slf.random_state;
         let use_parallel = slf.n_jobs != 1;
+
+        // Compute scaled tolerance (same as sklearn: tol * mean(var(X, axis=0)))
+        let mean_var = {
+            let n = n_samples as f64;
+            let mut total_var = 0.0;
+            for col in 0..n_features {
+                let col_data = x_owned.column(col);
+                let mean: f64 = col_data.iter().sum::<f64>() / n;
+                let var: f64 = col_data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n;
+                total_var += var;
+            }
+            total_var / n_features as f64
+        };
+        let tol = slf.tol * mean_var;
 
         let (best_centroids, best_labels, best_inertia, best_n_iter, distances) =
             py.allow_threads(move || {

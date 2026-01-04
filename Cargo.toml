@@ -13,7 +13,8 @@ path = "rust/src/lib.rs"
 [dependencies]
 pyo3 = { version = "0.27", features = ["extension-module"] }
 numpy = "0.27"
-ndarray = { version = "0.17", features = ["rayon"] }
+ndarray = { version = "0.17", features = ["rayon", "blas"] }
+blas-src = { version = "0.10", features = ["accelerate"] }
 rayon = "1.10"
 thiserror = "2.0"
 
