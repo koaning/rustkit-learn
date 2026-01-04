@@ -16,6 +16,7 @@ numpy = "0.27"
 ndarray = { version = "0.17", features = ["rayon"] }
 rayon = "1.10"
 thiserror = "2.0"
+ndarray-linalg = { version = "0.18", features = ["openblas-static"] }
 
 [profile.release]
 lto = true

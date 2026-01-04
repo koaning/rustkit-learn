@@ -463,3 +463,65 @@ class KMeans:
             Negative inertia.
         """
         ...
+
+
+class RidgeRegressor:
+    """Ridge regression.
+
+    Linear least squares with L2 regularization.
+    """
+
+    coef_: Optional[NDArray[np.float64]]
+    """Estimated coefficients."""
+
+    intercept_: Optional[float]
+    """Independent term in the linear model."""
+
+    n_features_in_: Optional[int]
+    """Number of features seen during fit."""
+
+    n_samples_fit_: Optional[int]
+    """Number of samples in the fitted data."""
+
+    def __init__(
+        self,
+        *,
+        alpha: float = 1.0,
+        fit_intercept: bool = True,
+        solver: str = "auto",
+    ) -> None:
+        """Initialize RidgeRegressor.
+
+        Parameters
+        ----------
+        alpha : float, default=1.0
+            Regularization strength; must be non-negative.
+        fit_intercept : bool, default=True
+            Whether to calculate the intercept for this model.
+        solver : str, default='auto'
+            Solver to use. Supported: 'auto', 'cholesky'.
+        """
+        ...
+
+    def fit(
+        self,
+        X: NDArray[np.float64],
+        y: NDArray[np.float64],
+    ) -> "RidgeRegressor":
+        """Fit ridge regression model."""
+        ...
+
+    def predict(
+        self,
+        X: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
+        """Predict using the ridge regression model."""
+        ...
+
+    def score(
+        self,
+        X: NDArray[np.float64],
+        y: NDArray[np.float64],
+    ) -> float:
+        """Return coefficient of determination R^2 of prediction."""
+        ...
