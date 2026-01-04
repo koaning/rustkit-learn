@@ -280,3 +280,186 @@ class MinMaxScaler:
             Original data.
         """
         ...
+
+
+class KMeans:
+    """K-Means clustering.
+
+    Parameters
+    ----------
+    n_clusters : int, default=8
+        The number of clusters to form.
+
+    init : {'k-means++', 'random'}, default='k-means++'
+        Method for initialization.
+
+    n_init : int or None, default=None
+        Number of times to run with different seeds. Default is 1 for
+        'k-means++' and 10 for 'random'.
+
+    max_iter : int, default=300
+        Maximum number of iterations.
+
+    tol : float, default=1e-4
+        Relative tolerance for convergence.
+
+    random_state : int or None, default=None
+        Seed for random number generation.
+
+    n_jobs : int, default=1
+        Number of parallel jobs.
+    """
+
+    cluster_centers_: Optional[NDArray[np.float64]]
+    """Coordinates of cluster centers. Shape (n_clusters, n_features)."""
+
+    labels_: Optional[NDArray[np.int64]]
+    """Labels of each point. Shape (n_samples,)."""
+
+    inertia_: Optional[float]
+    """Sum of squared distances to nearest cluster center."""
+
+    n_iter_: Optional[int]
+    """Number of iterations run."""
+
+    n_features_in_: Optional[int]
+    """Number of features seen during fit."""
+
+    def __init__(
+        self,
+        *,
+        n_clusters: int = 8,
+        init: str = "k-means++",
+        n_init: Optional[int] = None,
+        max_iter: int = 300,
+        tol: float = 1e-4,
+        random_state: Optional[int] = None,
+        n_jobs: int = 1,
+    ) -> None:
+        """Initialize KMeans.
+
+        Parameters
+        ----------
+        n_clusters : int, default=8
+            The number of clusters to form.
+        init : str, default='k-means++'
+            Method for initialization ('k-means++' or 'random').
+        n_init : int or None, default=None
+            Number of initializations. Default is 1 for 'k-means++', 10 for 'random'.
+        max_iter : int, default=300
+            Maximum number of iterations.
+        tol : float, default=1e-4
+            Relative tolerance for convergence.
+        random_state : int or None, default=None
+            Seed for random number generation.
+        n_jobs : int, default=1
+            Number of parallel jobs.
+        """
+        ...
+
+    def fit(
+        self,
+        X: NDArray[np.float64],
+    ) -> "KMeans":
+        """Compute k-means clustering.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training instances to cluster.
+
+        Returns
+        -------
+        self : KMeans
+        """
+        ...
+
+    def predict(
+        self,
+        X: NDArray[np.float64],
+    ) -> NDArray[np.int64]:
+        """Predict the closest cluster each sample belongs to.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            New data to predict.
+
+        Returns
+        -------
+        labels : ndarray of shape (n_samples,)
+            Index of the cluster each sample belongs to.
+        """
+        ...
+
+    def fit_predict(
+        self,
+        X: NDArray[np.float64],
+    ) -> NDArray[np.int64]:
+        """Compute cluster centers and predict cluster index for each sample.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            New data to transform.
+
+        Returns
+        -------
+        labels : ndarray of shape (n_samples,)
+            Index of the cluster each sample belongs to.
+        """
+        ...
+
+    def transform(
+        self,
+        X: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
+        """Transform X to a cluster-distance space.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            New data to transform.
+
+        Returns
+        -------
+        X_new : ndarray of shape (n_samples, n_clusters)
+            X transformed to cluster-distance space.
+        """
+        ...
+
+    def fit_transform(
+        self,
+        X: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
+        """Fit and transform in one step.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            New data to fit and transform.
+
+        Returns
+        -------
+        X_new : ndarray of shape (n_samples, n_clusters)
+            X transformed to cluster-distance space.
+        """
+        ...
+
+    def score(
+        self,
+        X: NDArray[np.float64],
+    ) -> float:
+        """Opposite of inertia (for sklearn compatibility).
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            New data.
+
+        Returns
+        -------
+        score : float
+            Negative inertia.
+        """
+        ...
