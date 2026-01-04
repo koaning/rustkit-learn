@@ -159,7 +159,7 @@ impl KMeans {
 
         // Run k-means n_init times and keep best result
         let (best_centroids, best_labels, best_inertia, best_n_iter) =
-            py.allow_threads(move || {
+            py.detach(move || {
                 let mut best_centroids: Option<Array2<f64>> = None;
                 let mut best_labels: Option<Array1<i64>> = None;
                 let mut best_inertia = f64::MAX;
@@ -266,7 +266,7 @@ impl KMeans {
         let centroids_owned = centroids.clone();
         let use_parallel = self.n_jobs != 1;
 
-        let labels = py.allow_threads(move || {
+        let labels = py.detach(move || {
             let (labels, _distances) = if use_parallel {
                 assign_clusters_parallel(x_owned.view(), centroids_owned.view())
             } else {
@@ -331,7 +331,7 @@ impl KMeans {
         let tol = slf.tol * mean_var;
 
         let (best_centroids, best_labels, best_inertia, best_n_iter) =
-            py.allow_threads(move || {
+            py.detach(move || {
                 let mut best_centroids: Option<Array2<f64>> = None;
                 let mut best_labels: Option<Array1<i64>> = None;
                 let mut best_inertia = f64::MAX;
@@ -431,7 +431,7 @@ impl KMeans {
         let centroids_owned = centroids.clone();
         let use_parallel = self.n_jobs != 1;
 
-        let distances = py.allow_threads(move || {
+        let distances = py.detach(move || {
             if use_parallel {
                 compute_distances_parallel(x_owned.view(), centroids_owned.view())
             } else {
@@ -495,7 +495,7 @@ impl KMeans {
         let tol = slf.tol * mean_var;
 
         let (best_centroids, best_labels, best_inertia, best_n_iter, distances) =
-            py.allow_threads(move || {
+            py.detach(move || {
                 let mut best_centroids: Option<Array2<f64>> = None;
                 let mut best_labels: Option<Array1<i64>> = None;
                 let mut best_inertia = f64::MAX;
@@ -598,7 +598,7 @@ impl KMeans {
         let centroids_owned = centroids.clone();
         let use_parallel = self.n_jobs != 1;
 
-        let inertia = py.allow_threads(move || {
+        let inertia = py.detach(move || {
             let (_labels, distances) = if use_parallel {
                 assign_clusters_parallel(x_owned.view(), centroids_owned.view())
             } else {

@@ -402,9 +402,9 @@ pub fn compute_centroids_single(
     }
 
     // Divide by counts
-    for k in 0..n_clusters {
-        if counts[k] > 0 {
-            let count = counts[k] as f64;
+    for (k, &count) in counts.iter().enumerate() {
+        if count > 0 {
+            let count = count as f64;
             centroids.row_mut(k).mapv_inplace(|v| v / count);
         }
     }
