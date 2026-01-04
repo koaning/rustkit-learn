@@ -2,8 +2,6 @@
 
 import numpy as np
 import pytest
-
-sklearn = pytest.importorskip("sklearn")
 from sklearn.linear_model import Ridge as SklearnRidge
 
 from rklearn import RidgeRegressor
