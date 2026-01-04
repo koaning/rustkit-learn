@@ -21,7 +21,12 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
+    "altair>=6.0.0",
     "numpy>=1.20",
+    "pandas>=2.3.3",
+    "polars>=1.36.1",
+    "pyarrow>=21.0.0",
+    "scikit-learn>=1.6.1",
 ]
 
 [project.optional-dependencies]
