@@ -1,6 +1,86 @@
 use ndarray::{Array2, ArrayView1, ArrayView2};
 use rayon::prelude::*;
 
+/// Distance metric enum for fast dispatch (no string matching in hot path)
+#[derive(Clone, Copy, Debug)]
+pub enum DistanceMetric {
+    Euclidean,
+    Manhattan,
+    Minkowski(f64),
+}
+
+impl DistanceMetric {
+    pub fn from_str(metric: &str, p: f64) -> Self {
+        match metric {
+            "euclidean" => DistanceMetric::Euclidean,
+            "manhattan" => DistanceMetric::Manhattan,
+            "minkowski" => DistanceMetric::Minkowski(p),
+            _ => DistanceMetric::Euclidean,
+        }
+    }
+}
+
+/// Compute squared Euclidean distance (avoids sqrt for comparisons)
+/// Uses explicit loop unrolling for better vectorization
+#[inline(always)]
+pub fn squared_euclidean_distance(a: ArrayView1<f64>, b: ArrayView1<f64>) -> f64 {
+    // Use contiguous slice access when possible
+    if let (Some(a_slice), Some(b_slice)) = (a.as_slice(), b.as_slice()) {
+        squared_euclidean_distance_slice(a_slice, b_slice)
+    } else {
+        // Fallback for non-contiguous arrays
+        a.iter()
+            .zip(b.iter())
+            .map(|(ai, bi)| {
+                let diff = ai - bi;
+                diff * diff
+            })
+            .sum::<f64>()
+    }
+}
+
+/// Compute squared Euclidean distance from raw slices (fastest path)
+/// Uses explicit loop unrolling for better auto-vectorization
+#[inline(always)]
+pub fn squared_euclidean_distance_slice(a: &[f64], b: &[f64]) -> f64 {
+    let n = a.len();
+
+    // Use 4-way unrolling for better SIMD utilization
+    let chunks = n / 4;
+    let remainder = n % 4;
+
+    let mut sum0 = 0.0;
+    let mut sum1 = 0.0;
+    let mut sum2 = 0.0;
+    let mut sum3 = 0.0;
+
+    // Main loop - 4 elements at a time
+    for i in 0..chunks {
+        let base = i * 4;
+        unsafe {
+            let d0 = *a.get_unchecked(base) - *b.get_unchecked(base);
+            let d1 = *a.get_unchecked(base + 1) - *b.get_unchecked(base + 1);
+            let d2 = *a.get_unchecked(base + 2) - *b.get_unchecked(base + 2);
+            let d3 = *a.get_unchecked(base + 3) - *b.get_unchecked(base + 3);
+            sum0 += d0 * d0;
+            sum1 += d1 * d1;
+            sum2 += d2 * d2;
+            sum3 += d3 * d3;
+        }
+    }
+
+    // Handle remainder
+    let base = chunks * 4;
+    for i in 0..remainder {
+        unsafe {
+            let d = *a.get_unchecked(base + i) - *b.get_unchecked(base + i);
+            sum0 += d * d;
+        }
+    }
+
+    sum0 + sum1 + sum2 + sum3
+}
+
 /// Compute Minkowski distance between two vectors.
 /// This is the generalized distance metric where:
 /// - p=1 gives Manhattan distance
@@ -16,14 +96,7 @@ pub fn minkowski_distance(a: ArrayView1<f64>, b: ArrayView1<f64>, metric: &str, 
 
     if effective_p == 2.0 {
         // Optimized Euclidean distance
-        a.iter()
-            .zip(b.iter())
-            .map(|(ai, bi)| {
-                let diff = ai - bi;
-                diff * diff
-            })
-            .sum::<f64>()
-            .sqrt()
+        squared_euclidean_distance(a, b).sqrt()
     } else if effective_p == 1.0 {
         // Optimized Manhattan distance
         a.iter()
@@ -37,6 +110,63 @@ pub fn minkowski_distance(a: ArrayView1<f64>, b: ArrayView1<f64>, metric: &str, 
             .map(|(ai, bi)| (ai - bi).abs().powf(effective_p))
             .sum::<f64>()
             .powf(1.0 / effective_p)
+    }
+}
+
+/// Compute distance using metric enum (faster than string matching)
+#[inline]
+pub fn compute_distance(a: ArrayView1<f64>, b: ArrayView1<f64>, metric: DistanceMetric) -> f64 {
+    match metric {
+        DistanceMetric::Euclidean => squared_euclidean_distance(a, b).sqrt(),
+        DistanceMetric::Manhattan => a
+            .iter()
+            .zip(b.iter())
+            .map(|(ai, bi)| (ai - bi).abs())
+            .sum::<f64>(),
+        DistanceMetric::Minkowski(p) => a
+            .iter()
+            .zip(b.iter())
+            .map(|(ai, bi)| (ai - bi).abs().powf(p))
+            .sum::<f64>()
+            .powf(1.0 / p),
+    }
+}
+
+/// Compute squared distance for comparison (avoids sqrt when possible)
+#[inline]
+pub fn compute_squared_distance(
+    a: ArrayView1<f64>,
+    b: ArrayView1<f64>,
+    metric: DistanceMetric,
+) -> f64 {
+    match metric {
+        DistanceMetric::Euclidean => squared_euclidean_distance(a, b),
+        DistanceMetric::Manhattan => {
+            let d = a
+                .iter()
+                .zip(b.iter())
+                .map(|(ai, bi)| (ai - bi).abs())
+                .sum::<f64>();
+            d * d // square it for comparison
+        }
+        DistanceMetric::Minkowski(p) => {
+            let d = a
+                .iter()
+                .zip(b.iter())
+                .map(|(ai, bi)| (ai - bi).abs().powf(p))
+                .sum::<f64>()
+                .powf(1.0 / p);
+            d * d
+        }
+    }
+}
+
+/// Convert squared distance back to actual distance
+#[inline]
+pub fn sqrt_distance(squared_dist: f64, metric: DistanceMetric) -> f64 {
+    match metric {
+        DistanceMetric::Euclidean => squared_dist.sqrt(),
+        _ => squared_dist.sqrt(), // Other metrics already squared the final distance
     }
 }
 
@@ -128,7 +258,129 @@ pub fn predict_parallel(
 }
 
 /// Compute predictions using k-nearest neighbors (single-threaded version).
+/// Optimized for Euclidean distance using squared distance computations.
 pub fn predict_single(
+    x_test: ArrayView2<f64>,
+    x_train: ArrayView2<f64>,
+    y_train: ArrayView1<f64>,
+    k: usize,
+    weights: &str,
+    metric: &str,
+    p: f64,
+) -> Vec<f64> {
+    // Use optimized path for Euclidean distance
+    if metric == "euclidean" || (metric == "minkowski" && p == 2.0) {
+        predict_single_euclidean(x_test, x_train, y_train, k, weights == "distance")
+    } else {
+        predict_single_general(x_test, x_train, y_train, k, weights, metric, p)
+    }
+}
+
+/// Optimized brute-force KNN for Euclidean distance
+/// Uses the formula: ||a - b||^2 = ||a||^2 + ||b||^2 - 2*a·b
+/// This leverages precomputation of norms and dot products
+fn predict_single_euclidean(
+    x_test: ArrayView2<f64>,
+    x_train: ArrayView2<f64>,
+    y_train: ArrayView1<f64>,
+    k: usize,
+    use_distance_weights: bool,
+) -> Vec<f64> {
+    let n_test = x_test.nrows();
+    let n_train = x_train.nrows();
+    let n_features = x_test.ncols();
+
+    // Precompute squared norms for training data
+    let train_sq_norms: Vec<f64> = (0..n_train)
+        .map(|j| {
+            let row = x_train.row(j);
+            row.iter().map(|&x| x * x).sum()
+        })
+        .collect();
+
+    let mut sq_distances = vec![0.0f64; n_train];
+    let mut predictions = Vec::with_capacity(n_test);
+
+    // Get contiguous slices if possible for faster access
+    let x_test_contig = x_test.as_slice();
+    let x_train_contig = x_train.as_slice();
+
+    for i in 0..n_test {
+        // Compute test point squared norm
+        let test_sq_norm: f64 = if let Some(test_slice) = x_test_contig {
+            let test_start = i * n_features;
+            test_slice[test_start..test_start + n_features]
+                .iter()
+                .map(|&x| x * x)
+                .sum()
+        } else {
+            x_test.row(i).iter().map(|&x| x * x).sum()
+        };
+
+        // Compute squared distances: ||a-b||^2 = ||a||^2 + ||b||^2 - 2*a·b
+        if let (Some(test_slice), Some(train_slice)) = (x_test_contig, x_train_contig) {
+            let test_start = i * n_features;
+            let test_row = &test_slice[test_start..test_start + n_features];
+
+            for j in 0..n_train {
+                let train_start = j * n_features;
+                let train_row = &train_slice[train_start..train_start + n_features];
+
+                // Compute dot product
+                let mut dot = 0.0;
+                for f in 0..n_features {
+                    dot += test_row[f] * train_row[f];
+                }
+
+                sq_distances[j] = (test_sq_norm + train_sq_norms[j] - 2.0 * dot).max(0.0);
+            }
+        } else {
+            let test_row = x_test.row(i);
+            for j in 0..n_train {
+                let train_row = x_train.row(j);
+                let dot: f64 = test_row
+                    .iter()
+                    .zip(train_row.iter())
+                    .map(|(&a, &b)| a * b)
+                    .sum();
+                sq_distances[j] = (test_sq_norm + train_sq_norms[j] - 2.0 * dot).max(0.0);
+            }
+        }
+
+        // Find k nearest using squared distances (no sqrt needed for comparison)
+        let (indices, sq_dists) = find_k_nearest(&sq_distances, k);
+
+        // Compute prediction
+        let pred = if use_distance_weights {
+            let mut weighted_sum = 0.0;
+            let mut weight_total = 0.0;
+
+            for (&idx, &sq_dist) in indices.iter().zip(sq_dists.iter()) {
+                if sq_dist == 0.0 {
+                    weighted_sum = y_train[idx];
+                    weight_total = 1.0;
+                    break;
+                }
+                // weight = 1/dist = 1/sqrt(sq_dist)
+                let weight = 1.0 / sq_dist.sqrt();
+                weighted_sum += weight * y_train[idx];
+                weight_total += weight;
+            }
+
+            weighted_sum / weight_total
+        } else {
+            let sum: f64 = indices.iter().map(|&idx| y_train[idx]).sum();
+            sum / indices.len() as f64
+        };
+
+        predictions.push(pred);
+    }
+
+    predictions
+}
+
+/// General brute-force KNN for non-Euclidean metrics
+fn predict_single_general(
     x_test: ArrayView2<f64>,
     x_train: ArrayView2<f64>,
     y_train: ArrayView1<f64>,

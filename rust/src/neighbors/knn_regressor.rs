@@ -130,13 +130,17 @@ impl KNeighborsRegressor {
         let n_samples = x_arr.nrows();
 
         // Determine effective algorithm
+        // Match sklearn's heuristic: use brute force for high dimensions or small datasets
         let effective_algorithm = match slf.algorithm.as_str() {
             "auto" => {
-                // Use KD-Tree for low dimensions, Ball-Tree otherwise
-                if n_features < 20 {
-                    "kd_tree".to_string()
+                // sklearn switches to brute force around 15-20 features
+                // and also for small datasets where tree overhead isn't worth it
+                if n_features > 15 {
+                    "brute".to_string()
+                } else if n_samples < 30 {
+                    "brute".to_string()
                 } else {
-                    "ball_tree".to_string()
+                    "kd_tree".to_string()
                 }
             }
             alg => alg.to_string(),
