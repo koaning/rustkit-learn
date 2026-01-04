@@ -1,12 +1,12 @@
 use pyo3::prelude::*;
 
-mod neighbors;
 mod linear;
+mod neighbors;
 mod scalers;
 mod utils;
 
-use neighbors::KNeighborsRegressor;
 use linear::RidgeRegressor;
+use neighbors::KNeighborsRegressor;
 use scalers::{MinMaxScaler, StandardScaler};
 
 #[pymodule]
