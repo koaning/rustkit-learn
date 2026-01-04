@@ -158,78 +158,77 @@ impl KMeans {
         let tol = slf.tol * mean_var;
 
         // Run k-means n_init times and keep best result
-        let (best_centroids, best_labels, best_inertia, best_n_iter) =
-            py.detach(move || {
-                let mut best_centroids: Option<Array2<f64>> = None;
-                let mut best_labels: Option<Array1<i64>> = None;
-                let mut best_inertia = f64::MAX;
-                let mut best_n_iter = 0usize;
+        let (best_centroids, best_labels, best_inertia, best_n_iter) = py.detach(move || {
+            let mut best_centroids: Option<Array2<f64>> = None;
+            let mut best_labels: Option<Array1<i64>> = None;
+            let mut best_inertia = f64::MAX;
+            let mut best_n_iter = 0usize;
 
-                for init_run in 0..n_init {
-                    // Create RNG with seed derived from random_state and init_run
-                    let seed = random_state.unwrap_or(0).wrapping_add(init_run as u64);
-                    let mut rng = SimpleRng::new(seed);
+            for init_run in 0..n_init {
+                // Create RNG with seed derived from random_state and init_run
+                let seed = random_state.unwrap_or(0).wrapping_add(init_run as u64);
+                let mut rng = SimpleRng::new(seed);
 
-                    // Initialize centroids
-                    let mut centroids = if init == "k-means++" {
-                        initialize_centroids_kmeans_plusplus(x_owned.view(), n_clusters, &mut rng)
-                    } else {
-                        initialize_centroids_random(x_owned.view(), n_clusters, &mut rng)
-                    };
+                // Initialize centroids
+                let mut centroids = if init == "k-means++" {
+                    initialize_centroids_kmeans_plusplus(x_owned.view(), n_clusters, &mut rng)
+                } else {
+                    initialize_centroids_random(x_owned.view(), n_clusters, &mut rng)
+                };
 
-                    let mut n_iter = 0usize;
+                let mut n_iter = 0usize;
 
-                    // Lloyd's algorithm main loop
-                    for iter in 0..max_iter {
-                        n_iter = iter + 1;
+                // Lloyd's algorithm main loop
+                for iter in 0..max_iter {
+                    n_iter = iter + 1;
 
-                        // E-step: Assign samples to nearest centroid
-                        let (labels, _distances) = if use_parallel {
-                            assign_clusters_parallel(x_owned.view(), centroids.view())
-                        } else {
-                            assign_clusters_single(x_owned.view(), centroids.view())
-                        };
-
-                        // M-step: Update centroids
-                        let new_centroids = if use_parallel {
-                            compute_centroids_parallel(x_owned.view(), labels.view(), n_clusters)
-                        } else {
-                            compute_centroids_single(x_owned.view(), labels.view(), n_clusters)
-                        };
-
-                        // Check convergence
-                        let shift = centroid_shift(centroids.view(), new_centroids.view());
-                        centroids = new_centroids;
-
-                        if shift <= tol {
-                            break;
-                        }
-                    }
-
-                    // Final assignment for this run
-                    let (final_labels, final_distances) = if use_parallel {
+                    // E-step: Assign samples to nearest centroid
+                    let (labels, _distances) = if use_parallel {
                         assign_clusters_parallel(x_owned.view(), centroids.view())
                     } else {
                         assign_clusters_single(x_owned.view(), centroids.view())
                     };
-                    let inertia = compute_inertia(final_distances.view());
 
-                    // Keep best result
-                    if inertia < best_inertia {
-                        best_inertia = inertia;
-                        best_centroids = Some(centroids);
-                        best_labels = Some(final_labels);
-                        best_n_iter = n_iter;
+                    // M-step: Update centroids
+                    let new_centroids = if use_parallel {
+                        compute_centroids_parallel(x_owned.view(), labels.view(), n_clusters)
+                    } else {
+                        compute_centroids_single(x_owned.view(), labels.view(), n_clusters)
+                    };
+
+                    // Check convergence
+                    let shift = centroid_shift(centroids.view(), new_centroids.view());
+                    centroids = new_centroids;
+
+                    if shift <= tol {
+                        break;
                     }
                 }
 
-                (
-                    best_centroids.unwrap(),
-                    best_labels.unwrap(),
-                    best_inertia,
-                    best_n_iter,
-                )
-            });
+                // Final assignment for this run
+                let (final_labels, final_distances) = if use_parallel {
+                    assign_clusters_parallel(x_owned.view(), centroids.view())
+                } else {
+                    assign_clusters_single(x_owned.view(), centroids.view())
+                };
+                let inertia = compute_inertia(final_distances.view());
+
+                // Keep best result
+                if inertia < best_inertia {
+                    best_inertia = inertia;
+                    best_centroids = Some(centroids);
+                    best_labels = Some(final_labels);
+                    best_n_iter = n_iter;
+                }
+            }
+
+            (
+                best_centroids.unwrap(),
+                best_labels.unwrap(),
+                best_inertia,
+                best_n_iter,
+            )
+        });
 
         // Store fitted state
         slf.cluster_centers = Some(best_centroids);
@@ -330,70 +329,69 @@ impl KMeans {
         };
         let tol = slf.tol * mean_var;
 
-        let (best_centroids, best_labels, best_inertia, best_n_iter) =
-            py.detach(move || {
-                let mut best_centroids: Option<Array2<f64>> = None;
-                let mut best_labels: Option<Array1<i64>> = None;
-                let mut best_inertia = f64::MAX;
-                let mut best_n_iter = 0usize;
+        let (best_centroids, best_labels, best_inertia, best_n_iter) = py.detach(move || {
+            let mut best_centroids: Option<Array2<f64>> = None;
+            let mut best_labels: Option<Array1<i64>> = None;
+            let mut best_inertia = f64::MAX;
+            let mut best_n_iter = 0usize;
 
-                for init_run in 0..n_init {
-                    let seed = random_state.unwrap_or(0).wrapping_add(init_run as u64);
-                    let mut rng = SimpleRng::new(seed);
+            for init_run in 0..n_init {
+                let seed = random_state.unwrap_or(0).wrapping_add(init_run as u64);
+                let mut rng = SimpleRng::new(seed);
 
-                    let mut centroids = if init == "k-means++" {
-                        initialize_centroids_kmeans_plusplus(x_owned.view(), n_clusters, &mut rng)
-                    } else {
-                        initialize_centroids_random(x_owned.view(), n_clusters, &mut rng)
-                    };
+                let mut centroids = if init == "k-means++" {
+                    initialize_centroids_kmeans_plusplus(x_owned.view(), n_clusters, &mut rng)
+                } else {
+                    initialize_centroids_random(x_owned.view(), n_clusters, &mut rng)
+                };
 
-                    let mut n_iter = 0usize;
+                let mut n_iter = 0usize;
 
-                    for iter in 0..max_iter {
-                        n_iter = iter + 1;
+                for iter in 0..max_iter {
+                    n_iter = iter + 1;
 
-                        let (labels, _distances) = if use_parallel {
-                            assign_clusters_parallel(x_owned.view(), centroids.view())
-                        } else {
-                            assign_clusters_single(x_owned.view(), centroids.view())
-                        };
-
-                        let new_centroids = if use_parallel {
-                            compute_centroids_parallel(x_owned.view(), labels.view(), n_clusters)
-                        } else {
-                            compute_centroids_single(x_owned.view(), labels.view(), n_clusters)
-                        };
-
-                        let shift = centroid_shift(centroids.view(), new_centroids.view());
-                        centroids = new_centroids;
-
-                        if shift <= tol {
-                            break;
-                        }
-                    }
-
-                    let (final_labels, final_distances) = if use_parallel {
+                    let (labels, _distances) = if use_parallel {
                         assign_clusters_parallel(x_owned.view(), centroids.view())
                     } else {
                         assign_clusters_single(x_owned.view(), centroids.view())
                     };
-                    let inertia = compute_inertia(final_distances.view());
 
-                    if inertia < best_inertia {
-                        best_inertia = inertia;
-                        best_centroids = Some(centroids);
-                        best_labels = Some(final_labels);
-                        best_n_iter = n_iter;
+                    let new_centroids = if use_parallel {
+                        compute_centroids_parallel(x_owned.view(), labels.view(), n_clusters)
+                    } else {
+                        compute_centroids_single(x_owned.view(), labels.view(), n_clusters)
+                    };
+
+                    let shift = centroid_shift(centroids.view(), new_centroids.view());
+                    centroids = new_centroids;
+
+                    if shift <= tol {
+                        break;
                     }
                 }
 
-                (
-                    best_centroids.unwrap(),
-                    best_labels.unwrap(),
-                    best_inertia,
-                    best_n_iter,
-                )
-            });
+                let (final_labels, final_distances) = if use_parallel {
+                    assign_clusters_parallel(x_owned.view(), centroids.view())
+                } else {
+                    assign_clusters_single(x_owned.view(), centroids.view())
+                };
+                let inertia = compute_inertia(final_distances.view());
+
+                if inertia < best_inertia {
+                    best_inertia = inertia;
+                    best_centroids = Some(centroids);
+                    best_labels = Some(final_labels);
+                    best_n_iter = n_iter;
+                }
+            }
+
+            (
+                best_centroids.unwrap(),
+                best_labels.unwrap(),
+                best_inertia,
+                best_n_iter,
+            )
+        });
 
         let labels_clone = best_labels.clone();
 
