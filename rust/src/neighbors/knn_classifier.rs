@@ -696,11 +696,8 @@ impl KNeighborsClassifier {
         let mut probabilities = Array2::zeros((n_samples, n_classes));
 
         // Create a mapping from class label to index
-        let class_to_idx: HashMap<i64, usize> = classes
-            .iter()
-            .enumerate()
-            .map(|(i, &c)| (c, i))
-            .collect();
+        let class_to_idx: HashMap<i64, usize> =
+            classes.iter().enumerate().map(|(i, &c)| (c, i)).collect();
 
         for i in 0..n_samples {
             let mut class_weights: Vec<f64> = vec![0.0; n_classes];
