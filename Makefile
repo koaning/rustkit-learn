@@ -2,7 +2,7 @@
 
 install:
 	uv sync --dev
-	uv pip install maturin pytest
+	uv pip install maturin pytest marimo
 	uv run maturin develop --release
 
 test:

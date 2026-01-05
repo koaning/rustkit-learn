@@ -3,6 +3,7 @@ rklearn - Fast scikit-learn compatible preprocessing in Rust
 """
 from ._rklearn import (
     KMeans,
+    KNeighborsClassifier,
     KNeighborsRegressor,
     MinMaxScaler,
     RidgeRegressor,
@@ -12,6 +13,7 @@ from ._rklearn import (
 
 __all__ = [
     "KMeans",
+    "KNeighborsClassifier",
     "KNeighborsRegressor",
     "MinMaxScaler",
     "RidgeRegressor",

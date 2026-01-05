@@ -50,7 +50,7 @@ def generate_features(n_samples, n_features, seed=42):
     return np.random.randn(n_samples, n_features)
 
 
-def benchmark_estimator(models, sample_sizes, feature_sizes, predict_size=1000):
+def benchmark_estimator(models, sample_sizes, feature_sizes, predict_size=1000, task="regression"):
     """Benchmark estimator models (fit + predict) across different data configurations.
 
     Args:
@@ -58,6 +58,7 @@ def benchmark_estimator(models, sample_sizes, feature_sizes, predict_size=1000):
         sample_sizes: List of training sample sizes
         feature_sizes: List of feature counts
         predict_size: Fixed size for predict benchmark (default 1000)
+        task: "regression" or "classification"
 
     Returns:
         List of result dicts with timing info for both fit and predict
@@ -68,8 +69,12 @@ def benchmark_estimator(models, sample_sizes, feature_sizes, predict_size=1000):
         for n_features in feature_sizes:
             print(f"  samples={n_samples:,}, features={n_features}...", end=" ", flush=True)
 
-            X_train, y_train = generate_regression_data(n_samples, n_features, seed=42)
-            X_pred, _ = generate_regression_data(predict_size, n_features, seed=123)
+            if task == "classification":
+                X_train, y_train = generate_classification_data(n_samples, n_features, seed=42)
+                X_pred, _ = generate_classification_data(predict_size, n_features, seed=123)
+            else:
+                X_train, y_train = generate_regression_data(n_samples, n_features, seed=42)
+                X_pred, _ = generate_regression_data(predict_size, n_features, seed=123)
             base_result = {"n_samples": n_samples, "n_features": n_features}
 
             for name, model in models:
