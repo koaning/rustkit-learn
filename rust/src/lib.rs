@@ -7,7 +7,7 @@ mod scalers;
 mod utils;
 
 use clustering::KMeans;
-use linear::RidgeRegressor;
+use linear::{HuberRegressor, RidgeRegressor};
 use neighbors::{KNeighborsClassifier, KNeighborsRegressor};
 use scalers::{MinMaxScaler, StandardScaler};
 
@@ -19,6 +19,7 @@ fn _rklearn(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<KNeighborsRegressor>()?;
     m.add_class::<KMeans>()?;
     m.add_class::<RidgeRegressor>()?;
+    m.add_class::<HuberRegressor>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }

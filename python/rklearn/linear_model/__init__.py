@@ -1,6 +1,7 @@
-from rklearn._rklearn import RidgeRegressor
+from rklearn._rklearn import HuberRegressor, RidgeRegressor
 
-# Alias to match sklearn naming convention
+# Aliases to match sklearn naming convention
+Huber = HuberRegressor
 Ridge = RidgeRegressor
 
-__all__ = ["Ridge", "RidgeRegressor"]
+__all__ = ["Huber", "HuberRegressor", "Ridge", "RidgeRegressor"]

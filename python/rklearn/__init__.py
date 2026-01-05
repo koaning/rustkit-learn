@@ -2,6 +2,7 @@
 rklearn - Fast scikit-learn compatible preprocessing in Rust
 """
 from ._rklearn import (
+    HuberRegressor,
     KMeans,
     KNeighborsClassifier,
     KNeighborsRegressor,
@@ -12,6 +13,7 @@ from ._rklearn import (
 )
 
 __all__ = [
+    "HuberRegressor",
     "KMeans",
     "KNeighborsClassifier",
     "KNeighborsRegressor",
