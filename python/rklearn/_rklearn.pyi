@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import NDArray
 
@@ -462,6 +462,301 @@ class KMeans:
         score : float
             Negative inertia.
         """
+        ...
+
+
+class KNeighborsClassifier:
+    """K-Nearest Neighbors Classifier.
+
+    Classifier implementing the k-nearest neighbors vote.
+    """
+
+    n_features_in_: Optional[int]
+    """Number of features seen during fit."""
+
+    n_samples_fit_: Optional[int]
+    """Number of samples in the fitted data."""
+
+    n_neighbors_: int
+    """The number of neighbors to use."""
+
+    classes_: Optional[list[int]]
+    """Class labels known to the classifier."""
+
+    def __init__(
+        self,
+        *,
+        n_neighbors: int = 5,
+        weights: str = "uniform",
+        algorithm: str = "auto",
+        leaf_size: int = 30,
+        metric: str = "euclidean",
+        p: float = 2.0,
+        n_jobs: int = 1,
+    ) -> None:
+        """Initialize KNeighborsClassifier.
+
+        Parameters
+        ----------
+        n_neighbors : int, default=5
+            Number of neighbors to use for prediction.
+        weights : str, default='uniform'
+            Weight function used in prediction ('uniform' or 'distance').
+        algorithm : str, default='auto'
+            Algorithm used to compute nearest neighbors ('auto', 'ball_tree', 'kd_tree', 'brute').
+        leaf_size : int, default=30
+            Leaf size passed to BallTree or KDTree.
+        metric : str, default='euclidean'
+            Distance metric to use ('euclidean', 'manhattan', 'minkowski').
+        p : float, default=2.0
+            Power parameter for Minkowski metric.
+        n_jobs : int, default=1
+            Number of parallel jobs.
+        """
+        ...
+
+    def fit(
+        self,
+        X: NDArray[np.float64],
+        y: NDArray[np.int64],
+    ) -> "KNeighborsClassifier":
+        """Fit the k-nearest neighbors classifier.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data.
+        y : array-like of shape (n_samples,)
+            Target class labels.
+
+        Returns
+        -------
+        self : KNeighborsClassifier
+        """
+        ...
+
+    def predict(
+        self,
+        X: NDArray[np.float64],
+    ) -> NDArray[np.int64]:
+        """Predict the class labels for the provided data.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Test samples.
+
+        Returns
+        -------
+        y : ndarray of shape (n_samples,)
+            Class labels for each sample.
+        """
+        ...
+
+    def predict_proba(
+        self,
+        X: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
+        """Predict class probabilities for the provided data.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Test samples.
+
+        Returns
+        -------
+        p : ndarray of shape (n_samples, n_classes)
+            Class probabilities of the input samples.
+        """
+        ...
+
+    def kneighbors(
+        self,
+        X: NDArray[np.float64],
+        n_neighbors: Optional[int] = None,
+        return_distance: bool = True,
+    ) -> Union[Tuple[NDArray[np.float64], NDArray[np.int64]], NDArray[np.int64]]:
+        """Find the K-neighbors of a point.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The query points.
+        n_neighbors : int, optional
+            Number of neighbors to get.
+        return_distance : bool, default=True
+            Whether to return distances.
+
+        Returns
+        -------
+        neigh_dist : ndarray of shape (n_samples, n_neighbors)
+            Array of distances. Only if return_distance=True.
+        neigh_ind : ndarray of shape (n_samples, n_neighbors)
+            Indices of the nearest neighbors.
+        """
+        ...
+
+    def score(
+        self,
+        X: NDArray[np.float64],
+        y: NDArray[np.int64],
+    ) -> float:
+        """Return the mean accuracy on the given test data and labels.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Test samples.
+        y : array-like of shape (n_samples,)
+            True labels for X.
+
+        Returns
+        -------
+        score : float
+            Mean accuracy.
+        """
+        ...
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get parameters for this estimator."""
+        ...
+
+
+class KNeighborsRegressor:
+    """K-Nearest Neighbors Regressor.
+
+    Regression based on k-nearest neighbors.
+    """
+
+    n_features_in_: Optional[int]
+    """Number of features seen during fit."""
+
+    n_samples_fit_: Optional[int]
+    """Number of samples in the fitted data."""
+
+    n_neighbors_: int
+    """The number of neighbors to use."""
+
+    def __init__(
+        self,
+        *,
+        n_neighbors: int = 5,
+        weights: str = "uniform",
+        algorithm: str = "auto",
+        leaf_size: int = 30,
+        metric: str = "euclidean",
+        p: float = 2.0,
+        n_jobs: int = 1,
+    ) -> None:
+        """Initialize KNeighborsRegressor.
+
+        Parameters
+        ----------
+        n_neighbors : int, default=5
+            Number of neighbors to use for prediction.
+        weights : str, default='uniform'
+            Weight function used in prediction ('uniform' or 'distance').
+        algorithm : str, default='auto'
+            Algorithm used to compute nearest neighbors ('auto', 'ball_tree', 'kd_tree', 'brute').
+        leaf_size : int, default=30
+            Leaf size passed to BallTree or KDTree.
+        metric : str, default='euclidean'
+            Distance metric to use ('euclidean', 'manhattan', 'minkowski').
+        p : float, default=2.0
+            Power parameter for Minkowski metric.
+        n_jobs : int, default=1
+            Number of parallel jobs.
+        """
+        ...
+
+    def fit(
+        self,
+        X: NDArray[np.float64],
+        y: NDArray[np.float64],
+    ) -> "KNeighborsRegressor":
+        """Fit the k-nearest neighbors regressor.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data.
+        y : array-like of shape (n_samples,)
+            Target values.
+
+        Returns
+        -------
+        self : KNeighborsRegressor
+        """
+        ...
+
+    def predict(
+        self,
+        X: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
+        """Predict the target for the provided data.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Test samples.
+
+        Returns
+        -------
+        y : ndarray of shape (n_samples,)
+            Target values.
+        """
+        ...
+
+    def kneighbors(
+        self,
+        X: NDArray[np.float64],
+        n_neighbors: Optional[int] = None,
+        return_distance: bool = True,
+    ) -> Union[Tuple[NDArray[np.float64], NDArray[np.int64]], NDArray[np.int64]]:
+        """Find the K-neighbors of a point.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The query points.
+        n_neighbors : int, optional
+            Number of neighbors to get.
+        return_distance : bool, default=True
+            Whether to return distances.
+
+        Returns
+        -------
+        neigh_dist : ndarray of shape (n_samples, n_neighbors)
+            Array of distances. Only if return_distance=True.
+        neigh_ind : ndarray of shape (n_samples, n_neighbors)
+            Indices of the nearest neighbors.
+        """
+        ...
+
+    def score(
+        self,
+        X: NDArray[np.float64],
+        y: NDArray[np.float64],
+    ) -> float:
+        """Return the coefficient of determination R^2 of the prediction.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Test samples.
+        y : array-like of shape (n_samples,)
+            True values for X.
+
+        Returns
+        -------
+        score : float
+            R^2 of self.predict(X) w.r.t. y.
+        """
+        ...
+
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        """Get parameters for this estimator."""
         ...
 
 
