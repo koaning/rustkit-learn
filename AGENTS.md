@@ -11,6 +11,6 @@ We strictly use **marimo** notebooks (`.py` files) instead of Jupyter notebooks 
 - Run notebooks with `uv run notebook.py`
 - Always validate notebooks with `uvx marimo check <notebook.py>` before committing
 
-## Organisation 
+## Organisation
 
-We do our best to mimic scikit-learn here. So just like scikit does `from sklearn.linear_model import Ridge` we should do `from rklearn.linear_model import Ridge`. We should also do our best to have objects that allow for `.get_params()`. 
+We do our best to mimic scikit-learn here. So just like scikit does `from sklearn.linear_model import Ridge` we should do `from rklearn.linear_model import Ridge`. We should also do our best to have objects that allow for `.get_params()`.
