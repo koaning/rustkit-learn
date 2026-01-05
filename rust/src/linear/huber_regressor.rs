@@ -337,7 +337,7 @@ fn compute_mad(residuals: &Array1<f64>) -> f64 {
     }
 
     let n = abs_residuals.len();
-    let median = if n % 2 == 0 {
+    let median = if n.is_multiple_of(2) {
         (abs_residuals[n / 2 - 1] + abs_residuals[n / 2]) / 2.0
     } else {
         abs_residuals[n / 2]
