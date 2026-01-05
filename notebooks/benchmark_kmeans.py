@@ -26,7 +26,7 @@ def _():
     import numpy as np
     import time
     from sklearn.cluster import KMeans as SklearnKMeans
-    from rklearn import KMeans as RklearnKMeans
+    from rklearn.cluster import KMeans as RklearnKMeans
     return RklearnKMeans, SklearnKMeans, np, time
 
 
