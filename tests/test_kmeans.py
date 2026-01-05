@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from rklearn import KMeans
+from rklearn.cluster import KMeans
 
 
 class TestKMeansBasic:
