@@ -319,7 +319,12 @@ impl HuberRegressor {
 fn compute_mad(residuals: &Array1<f64>) -> f64 {
     // Use parallel iterator for large arrays
     let mut abs_residuals: Vec<f64> = if residuals.len() > 10_000 {
-        residuals.as_slice().unwrap().par_iter().map(|r| r.abs()).collect()
+        residuals
+            .as_slice()
+            .unwrap()
+            .par_iter()
+            .map(|r| r.abs())
+            .collect()
     } else {
         residuals.iter().map(|r| r.abs()).collect()
     };
