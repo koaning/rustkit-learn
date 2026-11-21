@@ -61,6 +61,20 @@ Performance comparison (times in milliseconds, lower is better). Speedup > 1 mea
 
 *Benchmarks run on 100k samples x 50 features (scalers, ridge) and 10k samples x 10 features (KNN, KMeans).*
 
+### e-means and EGaussianMixture
+
+Held-out loss compared with sklearn, using default settings on a 4-core machine:
+
+| Model | Data (n x d, k) | Fit speedup vs sklearn | Held-out quality vs sklearn |
+|-------|-----------------|------------------------|-----------------------------|
+| EMeans vs KMeans | 200k x 16, k=256 | 2.5x | 3.5% lower inertia |
+| EMeans vs KMeans | 100k x 32, k=64 | 2.1x | 9.6% lower inertia |
+| EMeans vs KMeans | 50k x 8, k=32 | 4.7x | 11.3% higher inertia |
+| EGaussianMixture vs GaussianMixture(diag) | 200k x 16, k=32 | 3.1x | log-likelihood 0.26 lower |
+| EGaussianMixture vs GaussianMixture(diag) | 50k x 8, k=16 | 2.8x | log-likelihood 0.05 lower |
+
+Full tables, including the revival on/off comparison and a `batch_size` x `alpha` sweep, are in [BENCHMARKS.md](BENCHMARKS.md).
+
 ## License
 
 MIT OR Apache-2.0
