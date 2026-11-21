@@ -27,6 +27,11 @@ uv pip install git+https://github.com/koaning/rustkit-learn.git
 ### Clustering
 
 - **KMeans** - K-Means clustering
+- **EMeans** - e-means ([arXiv:2611.09501](https://arxiv.org/abs/2611.09501)): mini-batch k-means with EWM centroids. Tune `batch_size`, `alpha` (peak EWM step) and `revival` (dead-cluster revival on/off)
+
+### Mixture
+
+- **EGaussianMixture** - diagonal Gaussian mixture fitted with the same EWM trick (stochastic EM), in `rklearn.mixture`
 
 ## Benchmarks
 
@@ -55,6 +60,22 @@ Performance comparison (times in milliseconds, lower is better). Speedup > 1 mea
 | KMeans | 0.13 | 0.02 | 0.16 | 5.67x | 0.78x |
 
 *Benchmarks run on 100k samples x 50 features (scalers, ridge) and 10k samples x 10 features (KNN, KMeans).*
+
+### e-means and EGaussianMixture
+
+Median of 5 seeds at default settings on a 4-core machine. Quality is measured on held-out data against the best of 10 sklearn restarts (best of 5 for mixtures).
+
+| Model | Data (n x d, k) | Fit speedup vs sklearn | Held-out quality, rklearn vs sklearn |
+|-------|-----------------|------------------------|--------------------------------------|
+| EMeans vs KMeans | 50k x 8, k=32 | 1.4x | +4.7% vs +3.0% loss |
+| EMeans vs KMeans | 100k x 32, k=64 | 1.6x | +3.6% vs +7.3% loss |
+| EMeans vs KMeans | 200k x 16, k=256 | 2.0x | +3.6% vs +3.0% loss |
+| EGaussianMixture vs GaussianMixture(diag) | 50k x 8, k=16 | 2.9x | log-lik -0.11 vs -0.09 |
+| EGaussianMixture vs GaussianMixture(diag) | 200k x 16, k=32 | 3.5x | log-lik -0.31 vs -0.32 |
+
+![k-means fit time vs. held-out loss](benchmarks/img/emeans_tradeoff.png)
+
+The quality differences are smaller than the spread between seeds. Charts, the `batch_size` x `alpha` sweep and the revival comparison are in [BENCHMARKS.md](BENCHMARKS.md).
 
 ## License
 

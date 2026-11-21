@@ -465,6 +465,130 @@ class KMeans:
         ...
 
 
+class EMeans:
+    """e-means clustering (arXiv:2611.09501).
+
+    Mini-batch k-means where each centroid is an exponentially weighted moving
+    average (EWM) of the points assigned to it. The EWM step follows a cosine
+    schedule from ``alpha`` down to ``0.1 * alpha``, and the last pass replaces
+    each centroid with a plain mean.
+
+    Parameters
+    ----------
+    n_clusters : int, default=8
+        The number of clusters to form.
+    n_epochs : float, default=3.0
+        Passes over the data. Fractional values are allowed.
+    batch_size : int or None, default=None
+        Mini-batch size. None uses the paper's fitted batch law.
+    alpha : float or None, default=None
+        Peak EWM step in (0, 1]. None uses the paper's fitted step law.
+    revival : bool, default=False
+        Revive clusters whose EWM mass drops below 10% of the mean by
+        splitting a heavy cluster (the paper's rule, checked every 5 updates).
+    init : {'k-means++', 'random'}, default='k-means++'
+        Seeding. 'k-means++' runs on a subsample of max(10000, 20k) rows.
+    random_state : int or None, default=None
+        Seed for random number generation.
+    n_jobs : int, default=1
+        1 for single-threaded, any other value for parallel assignment.
+    """
+
+    cluster_centers_: Optional[NDArray[np.float64]]
+    labels_: Optional[NDArray[np.int64]]
+    inertia_: Optional[float]
+    n_iter_: Optional[int]
+    """Number of mini-batch updates performed."""
+    n_features_in_: Optional[int]
+    batch_size_: Optional[int]
+    """Batch size used in the last fit."""
+    alpha_: Optional[float]
+    """Peak EWM step used in the last fit."""
+    n_splits_: Optional[int]
+    """Number of clusters revived in the last fit."""
+
+    def __init__(
+        self,
+        *,
+        n_clusters: int = 8,
+        n_epochs: float = 3.0,
+        batch_size: Optional[int] = None,
+        alpha: Optional[float] = None,
+        revival: bool = False,
+        init: str = "k-means++",
+        random_state: Optional[int] = None,
+        n_jobs: int = 1,
+    ) -> None: ...
+    def fit(self, X: NDArray[np.float64]) -> "EMeans": ...
+    def predict(self, X: NDArray[np.float64]) -> NDArray[np.int64]: ...
+    def fit_predict(self, X: NDArray[np.float64]) -> NDArray[np.int64]: ...
+    def transform(self, X: NDArray[np.float64]) -> NDArray[np.float64]: ...
+    def fit_transform(self, X: NDArray[np.float64]) -> NDArray[np.float64]: ...
+    def score(self, X: NDArray[np.float64]) -> float: ...
+    def get_params(self, deep: bool = True) -> dict[str, Any]: ...
+
+
+class EGaussianMixture:
+    """Diagonal Gaussian mixture fitted with the e-means trick.
+
+    Stochastic EM on mini-batches: each component keeps an EWM of its
+    responsibility mass, mean and second moment, with the same batch law,
+    cosine step schedule, optional revival and last-pass finalization as
+    ``EMeans``.
+
+    Parameters
+    ----------
+    n_components : int, default=1
+    n_epochs : float, default=3.0
+    batch_size : int or None, default=None
+    alpha : float or None, default=None
+    revival : bool, default=False
+    reg_covar : float, default=1e-6
+        Added to every diagonal covariance entry.
+    init_params : {'k-means++', 'random'}, default='k-means++'
+    random_state : int or None, default=None
+    n_jobs : int, default=1
+    """
+
+    weights_: Optional[NDArray[np.float64]]
+    means_: Optional[NDArray[np.float64]]
+    covariances_: Optional[NDArray[np.float64]]
+    """Diagonal covariances, shape (n_components, n_features)."""
+    precisions_: Optional[NDArray[np.float64]]
+    covariance_type: str
+    labels_: Optional[NDArray[np.int64]]
+    lower_bound_: Optional[float]
+    """Mean log-likelihood of the training data."""
+    n_iter_: Optional[int]
+    n_features_in_: Optional[int]
+    batch_size_: Optional[int]
+    alpha_: Optional[float]
+    n_splits_: Optional[int]
+
+    def __init__(
+        self,
+        *,
+        n_components: int = 1,
+        n_epochs: float = 3.0,
+        batch_size: Optional[int] = None,
+        alpha: Optional[float] = None,
+        revival: bool = False,
+        reg_covar: float = 1e-6,
+        init_params: str = "k-means++",
+        random_state: Optional[int] = None,
+        n_jobs: int = 1,
+    ) -> None: ...
+    def fit(self, X: NDArray[np.float64]) -> "EGaussianMixture": ...
+    def predict(self, X: NDArray[np.float64]) -> NDArray[np.int64]: ...
+    def fit_predict(self, X: NDArray[np.float64]) -> NDArray[np.int64]: ...
+    def predict_proba(self, X: NDArray[np.float64]) -> NDArray[np.float64]: ...
+    def score_samples(self, X: NDArray[np.float64]) -> NDArray[np.float64]: ...
+    def score(self, X: NDArray[np.float64]) -> float: ...
+    def bic(self, X: NDArray[np.float64]) -> float: ...
+    def aic(self, X: NDArray[np.float64]) -> float: ...
+    def get_params(self, deep: bool = True) -> dict[str, Any]: ...
+
+
 class KNeighborsClassifier:
     """K-Nearest Neighbors Classifier.
 

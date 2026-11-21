@@ -1,3 +1,3 @@
-from rklearn._rklearn import KMeans
+from rklearn._rklearn import EMeans, KMeans
 
-__all__ = ["KMeans"]
+__all__ = ["EMeans", "KMeans"]
