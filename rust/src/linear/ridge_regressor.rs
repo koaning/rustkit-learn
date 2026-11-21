@@ -1,6 +1,6 @@
 #![allow(deprecated)]
 
-use ndarray::{Array1, Axis};
+use ndarray::{Array1, Axis, CowArray};
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods, PyReadonlyArray1, PyReadonlyArray2};
 use pyo3::prelude::*;
 
@@ -93,21 +93,21 @@ impl RidgeRegressor {
             ));
         }
 
+        // Center explicitly (rather than using XᵀX - n·μμᵀ) to avoid catastrophic
+        // cancellation when feature means are large relative to their spread.
+        // Without an intercept we work directly on the input views: no copies.
         let (x_centered, y_centered, x_mean, y_mean) = if slf.fit_intercept {
             let x_mean = x_arr.mean_axis(Axis(0)).unwrap();
             let y_mean = y_arr.sum() / y_arr.len() as f64;
             (
-                &x_arr - &x_mean,
-                &y_arr - y_mean,
+                CowArray::from(&x_arr - &x_mean),
+                CowArray::from(&y_arr - y_mean),
                 Some(x_mean),
                 Some(y_mean),
             )
         } else {
-            (x_arr.to_owned(), y_arr.to_owned(), None, None)
+            (CowArray::from(x_arr), CowArray::from(y_arr), None, None)
         };
-
-        let x_centered = x_centered.as_standard_layout().to_owned();
-        let y_centered = y_centered.as_standard_layout().to_owned();
 
         let mut xtx = x_centered.t().dot(&x_centered);
         let xty = x_centered.t().dot(&y_centered);
