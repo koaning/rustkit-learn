@@ -12,12 +12,15 @@ uv pip install git+https://github.com/koaning/rustkit-learn.git
 
 ### Linear Models
 
+- **LinearRegression** - Ordinary least squares (SVD solver, handles collinear features)
 - **RidgeRegressor** - Linear least squares with L2 regularization
 
 ### Preprocessing
 
 - **StandardScaler** - Standardize features by removing mean and scaling to unit variance
 - **MinMaxScaler** - Scale features to a given range (default [0, 1])
+- **MaxAbsScaler** - Scale each feature by its maximum absolute value
+- **Normalizer** - Rescale each sample to unit norm (l1, l2 or max)
 
 ### Neighbors
 

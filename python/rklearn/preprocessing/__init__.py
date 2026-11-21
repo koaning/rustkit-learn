@@ -1,3 +1,3 @@
-from rklearn._rklearn import MinMaxScaler, StandardScaler
+from rklearn._rklearn import MaxAbsScaler, MinMaxScaler, Normalizer, StandardScaler
 
-__all__ = ["MinMaxScaler", "StandardScaler"]
+__all__ = ["MaxAbsScaler", "MinMaxScaler", "Normalizer", "StandardScaler"]
