@@ -1,7 +1,13 @@
-"""Benchmarks comparing rklearn against scikit-learn."""
+"""Benchmarks comparing rklearn against scikit-learn.
+
+All benchmarks here are single-threaded: rklearn runs with n_jobs=1 and every
+test runs inside ``threadpool_limits(1)`` so that the BLAS/OpenMP thread pools
+used by numpy/scipy (and therefore sklearn) are capped at one thread too.
+"""
 
 import numpy as np
 import pytest
+from threadpoolctl import threadpool_limits
 from sklearn.preprocessing import StandardScaler as SklearnStandardScaler
 from sklearn.preprocessing import MinMaxScaler as SklearnMinMaxScaler
 
@@ -18,6 +24,13 @@ SIZES = [
 ]
 
 
+@pytest.fixture(autouse=True)
+def single_threaded():
+    """Limit BLAS/OpenMP thread pools to one thread for a fair comparison."""
+    with threadpool_limits(limits=1):
+        yield
+
+
 @pytest.fixture(params=SIZES, ids=[f"{r}x{c}" for r, c in SIZES])
 def data(request):
     rows, cols = request.param
@@ -30,7 +43,7 @@ class TestStandardScalerBenchmark:
 
     def test_rust_fit(self, benchmark, data):
         """Benchmark rustscaler StandardScaler.fit()."""
-        scaler = StandardScaler()
+        scaler = StandardScaler(n_jobs=1)
         benchmark(scaler.fit, data)
 
     def test_sklearn_fit(self, benchmark, data):
@@ -40,7 +53,7 @@ class TestStandardScalerBenchmark:
 
     def test_rust_transform(self, benchmark, data):
         """Benchmark rustscaler StandardScaler.transform()."""
-        scaler = StandardScaler()
+        scaler = StandardScaler(n_jobs=1)
         scaler.fit(data)
         benchmark(scaler.transform, data)
 
@@ -52,7 +65,7 @@ class TestStandardScalerBenchmark:
 
     def test_rust_fit_transform(self, benchmark, data):
         """Benchmark rustscaler StandardScaler.fit_transform()."""
-        scaler = StandardScaler()
+        scaler = StandardScaler(n_jobs=1)
         benchmark(scaler.fit_transform, data)
 
     def test_sklearn_fit_transform(self, benchmark, data):
@@ -66,7 +79,7 @@ class TestMinMaxScalerBenchmark:
 
     def test_rust_fit(self, benchmark, data):
         """Benchmark rustscaler MinMaxScaler.fit()."""
-        scaler = MinMaxScaler()
+        scaler = MinMaxScaler(n_jobs=1)
         benchmark(scaler.fit, data)
 
     def test_sklearn_fit(self, benchmark, data):
@@ -76,7 +89,7 @@ class TestMinMaxScalerBenchmark:
 
     def test_rust_transform(self, benchmark, data):
         """Benchmark rustscaler MinMaxScaler.transform()."""
-        scaler = MinMaxScaler()
+        scaler = MinMaxScaler(n_jobs=1)
         scaler.fit(data)
         benchmark(scaler.transform, data)
 
@@ -88,7 +101,7 @@ class TestMinMaxScalerBenchmark:
 
     def test_rust_fit_transform(self, benchmark, data):
         """Benchmark rustscaler MinMaxScaler.fit_transform()."""
-        scaler = MinMaxScaler()
+        scaler = MinMaxScaler(n_jobs=1)
         benchmark(scaler.fit_transform, data)
 
     def test_sklearn_fit_transform(self, benchmark, data):

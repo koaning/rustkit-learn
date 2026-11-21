@@ -19,7 +19,8 @@ def _(mo):
 
     **Benchmark Configuration:**
     - 20 iterations per benchmark (after 5 warmup runs)
-    - Fair comparison: both rklearn (n_jobs=1) and sklearn use single-threaded computation
+    - Fair comparison: both rklearn (n_jobs=1) and sklearn use single-threaded computation,
+      with BLAS/OpenMP thread pools capped via `threadpoolctl.threadpool_limits(1)`
     - Also shows rklearn with parallel computation (n_jobs=-1) for reference
     - Measures fit, transform, and fit_transform times
     """)
@@ -49,8 +50,9 @@ def _():
 
 @app.cell
 def _():
+    from threadpoolctl import threadpool_limits
     from utils import benchmark_transformer
-    return (benchmark_transformer,)
+    return benchmark_transformer, threadpool_limits
 
 
 @app.cell
@@ -69,8 +71,8 @@ def _(mo):
     Running benchmarks with 20 iterations each (after 5 warmup runs).
 
     **Libraries compared:**
-    - `sklearn`: scikit-learn (single-threaded)
-    - `rklearn`: rklearn with n_jobs=1 (single-threaded, fair comparison)
+    - `sklearn`: scikit-learn (single-threaded, inside `threadpool_limits(1)`)
+    - `rklearn`: rklearn with n_jobs=1 (single-threaded, inside `threadpool_limits(1)`)
     - `rklearn_parallel`: rklearn with n_jobs=-1 (multi-threaded via Rayon)
     """)
     return
@@ -85,6 +87,7 @@ def _(
     SklearnMinMaxScaler,
     SklearnStandardScaler,
     benchmark_transformer,
+    threadpool_limits,
 ):
     SCALERS = [
         ("StandardScaler", SklearnStandardScaler, RklearnStandardScaler),
@@ -92,23 +95,35 @@ def _(
     ]
 
     all_results = []
-    for scaler_name, sklearn_cls, rklearn_cls in SCALERS:
-        print(f"Benchmarking {scaler_name}:")
-        models = [
-            ("sklearn", sklearn_cls()),
-            ("rklearn", rklearn_cls(n_jobs=1)),
-            ("rklearn_parallel", rklearn_cls(n_jobs=-1)),
+    for _scaler_name, _sklearn_cls, _rklearn_cls in SCALERS:
+        print(f"Benchmarking {_scaler_name}:")
+        # (name, model, single_threaded). Single-threaded runs are wrapped in
+        # threadpool_limits(1) so numpy/scipy BLAS calls can't use extra cores.
+        _models = [
+            ("sklearn", _sklearn_cls(), True),
+            ("rklearn", _rklearn_cls(n_jobs=1), True),
+            ("rklearn_parallel", _rklearn_cls(n_jobs=-1), False),
         ]
-        results = benchmark_transformer(
-            models,
-            sample_sizes=SAMPLE_SIZES,
-            feature_sizes=FEATURE_SIZES
-        )
-        for r in results:
-            r["scaler"] = scaler_name
-        all_results.extend(results)
+        for _name, _model, _single_threaded in _models:
+            print(f" {_name}")
+            if _single_threaded:
+                with threadpool_limits(limits=1):
+                    _results = benchmark_transformer(
+                        [(_name, _model)],
+                        sample_sizes=SAMPLE_SIZES,
+                        feature_sizes=FEATURE_SIZES,
+                    )
+            else:
+                _results = benchmark_transformer(
+                    [(_name, _model)],
+                    sample_sizes=SAMPLE_SIZES,
+                    feature_sizes=FEATURE_SIZES,
+                )
+            for _r in _results:
+                _r["scaler"] = _scaler_name
+            all_results.extend(_results)
     print("Done!")
-    return SCALERS, all_results, models, results, scaler_name, sklearn_cls, rklearn_cls
+    return (all_results,)
 
 
 @app.cell

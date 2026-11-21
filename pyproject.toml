@@ -37,6 +37,7 @@ dev = [
     "marimo>=0.10",
     "polars>=1.0",
     "altair>=5.0",
+    "threadpoolctl>=3.1",
 ]
 
 [tool.maturin]
@@ -47,4 +48,5 @@ features = ["pyo3/extension-module"]
 [dependency-groups]
 dev = [
     "pytest>=8.4.2",
+    "threadpoolctl>=3.1",
 ]
