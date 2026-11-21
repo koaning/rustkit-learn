@@ -27,6 +27,11 @@ uv pip install git+https://github.com/koaning/rustkit-learn.git
 ### Clustering
 
 - **KMeans** - K-Means clustering
+- **EMeans** - e-means ([arXiv:2611.09501](https://arxiv.org/abs/2611.09501)): mini-batch k-means with EWM centroids. Tune `batch_size`, `alpha` (peak EWM step) and `revival` (dead-cluster revival on/off)
+
+### Mixture
+
+- **EGaussianMixture** - diagonal Gaussian mixture fitted with the same EWM trick (stochastic EM), in `rklearn.mixture`
 
 ## Benchmarks
 

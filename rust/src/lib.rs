@@ -6,7 +6,7 @@ mod neighbors;
 mod scalers;
 mod utils;
 
-use clustering::KMeans;
+use clustering::{EGaussianMixture, EMeans, KMeans};
 use linear::{HuberRegressor, RidgeRegressor};
 use neighbors::{KNeighborsClassifier, KNeighborsRegressor};
 use scalers::{MinMaxScaler, StandardScaler};
@@ -18,6 +18,8 @@ fn _rklearn(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<KNeighborsClassifier>()?;
     m.add_class::<KNeighborsRegressor>()?;
     m.add_class::<KMeans>()?;
+    m.add_class::<EMeans>()?;
+    m.add_class::<EGaussianMixture>()?;
     m.add_class::<RidgeRegressor>()?;
     m.add_class::<HuberRegressor>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
